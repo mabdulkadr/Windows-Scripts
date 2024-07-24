@@ -9,7 +9,7 @@
     3. Displays the results in the console immediately as each device is processed.
     4. Optionally saves the results to a CSV file.
 
-    Note: The CSV file must contain a header with the name "Device Name".
+    Note: The CSV file must contain a header with the name "DeviceName".
 
 .NOTES
     Author  : M.omar
@@ -76,14 +76,13 @@ function Select-CSVFile {
 
 # Display the main menu
 function Display-Menu {
-    cls
     Write-Host ""
-    Write-Host "######################################################" -ForegroundColor Cyan
+    Write-Host "######################################################" -ForegroundColor Green
     Write-Host "Select input method:" -ForegroundColor Yellow
     Write-Host "1: Enter a single device name manually." -ForegroundColor Yellow
     Write-Host "2: Upload a CSV file containing multiple device names." -ForegroundColor Yellow
     Write-Host "0: Exit." -ForegroundColor Yellow
-    Write-Host "######################################################" -ForegroundColor Cyan
+    Write-Host "######################################################" -ForegroundColor Green
     Write-Host ""
 }
 
@@ -111,14 +110,14 @@ function Main {
                         # Inform the user to wait while loading the CSV file
                         Write-Host ""
                         Write-Host "Loading device names from the CSV file. Please wait..." -ForegroundColor Cyan
-                        # Import device names from the selected CSV file with column name "Device name"
-                        $deviceNames = Import-Csv -Path $csvPath | ForEach-Object { $_.'Device name' }
+                        # Import device names from the selected CSV file with column name "DeviceName"
+                        $deviceNames = Import-Csv -Path $csvPath | ForEach-Object { $_.'DeviceName' }
                         Write-Host ""
                         Write-Host "Loaded $($deviceNames.Count) device names." -ForegroundColor Green
                         $exitFlag = $true
                     } catch {
                         Write-Host ""
-                        Write-Host "Failed to read the CSV file. Please ensure it has a 'Device name' column." -ForegroundColor Red
+                        Write-Host "Failed to read the CSV file. Please ensure it has a 'DeviceName' column." -ForegroundColor Red
                     }
                 } else {
                     Write-Host ""
