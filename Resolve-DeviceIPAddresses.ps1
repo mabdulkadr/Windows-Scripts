@@ -76,6 +76,7 @@ function Select-CSVFile {
 
 # Display the main menu
 function Display-Menu {
+    cls
     Write-Host ""
     Write-Host "######################################################" -ForegroundColor Green
     Write-Host "Select input method:" -ForegroundColor Yellow
