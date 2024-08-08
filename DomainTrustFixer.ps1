@@ -18,6 +18,8 @@
     Version : 1.0
 #>
 
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
 param (
     [string]$DomainController
 )
