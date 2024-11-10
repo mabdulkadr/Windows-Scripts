@@ -6,108 +6,107 @@
 
 ## Overview
 
-The **Azure AD Static Device Group Management Script** is a PowerShell tool designed to automate the creation and management of static Azure Active Directory (Azure AD) groups. It integrates seamlessly with Microsoft Intune to retrieve Windows devices, distribute them across Azure AD groups, and handle dynamic changes such as device additions or deletions. This ensures efficient group management without exceeding predefined member limits.
+The **Azure AD Static Device Group Management** PowerShell script automates the creation and management of static Azure Active Directory (Azure AD) groups by integrating with Microsoft Intune and Microsoft Graph. This ensures efficient organization of Windows devices within Azure AD, adhering to membership limits and facilitating streamlined device management.
 
 ## Features
 
-- **Automated Microsoft Graph Connection**: Automatically connects to Microsoft Graph using app-based authentication with specified `TenantID`, `AppID`, and `AppSecret`.
-- **Manual Azure AD Connection**: Allows users to manually connect to Azure AD using user-based authentication.
-- **Automated Group Creation**: Automatically creates static Azure AD groups with a specified prefix and numbering.
-- **Device Assignment**: Distributes devices across existing groups with fewer than 500 members or creates new groups as needed.
-- **Static Group Management**: Manages static groups, ensuring that groups do not exceed the maximum member limit.
-- **Logging**: Provides detailed logs with timestamps and message types for monitoring and troubleshooting.
-- **User-Friendly**: Simple setup and execution with customizable parameters.
-- **Error Handling**: Robust error handling to ensure smooth execution and clear feedback on issues.
+- **Automated Group Management**: Identifies existing static groups with a specified prefix and creates new groups as needed to accommodate all devices.
+- **Device Assignment**: Retrieves Windows devices from Intune and assigns them to appropriate Azure AD groups without exceeding the defined member limit per group.
+- **Batch Processing**: Handles large numbers of devices by processing them in configurable batches.
+- **Logging**: Optionally logs all operations to a specified file for auditing and troubleshooting.
+- **Modular Integration**: Utilizes Microsoft Graph and Azure AD modules for seamless integration and management.
 
 ## Prerequisites
 
-Before using the script, ensure the following prerequisites are met:
+- **PowerShell 5.1** or later (recommended PowerShell 7+)
+- **AzureAD Module**: Ensure the `AzureAD` PowerShell module is installed.
+- **Microsoft Graph Modules**: The script will automatically install the required Microsoft Graph modules if they are not already present on the system.
+- **Permissions**: 
+  - Administrative access to Azure AD.
+  - Permissions to create and manage groups and group memberships.
+- **Intune Access**: Access to Microsoft Intune to retrieve device information.
 
-- **PowerShell Version**: PowerShell 5.1 or higher.
-- **Modules**:
-  - [AzureAD](https://www.powershellgallery.com/packages/AzureAD)
-  - [Microsoft.Graph](https://www.powershellgallery.com/packages/Microsoft.Graph)
-- **Permissions**:
-  - Sufficient Azure AD permissions to create groups and manage group memberships.
-  - Access to Microsoft Intune to retrieve device information.
-  - App registration in Azure AD with the necessary permissions for Microsoft Graph.
-
-## Configuration
-
-Before running the script, you need to set up app-based authentication for Microsoft Graph:
-
-1. **App Registration in Azure AD**
-
-   - Register an application in Azure AD and obtain the following:
-     - **Tenant ID**: The Azure AD tenant ID.
-     - **Client ID (AppID)**: The application (client) ID.
-     - **Client Secret (AppSecret)**: The secret associated with the application.
-
-   > **Security Note**: Ensure that the `AppSecret` is stored securely and not exposed in source control or logs.
-
-2. **Customize Parameters**
-
-   You can customize the script parameters directly in the script or pass them as arguments when executing the script:
-
-   - **BatchSize**: Number of devices per group (default is 500).
-   - **GroupNamePrefix**: Prefix for the group names (default is "Devices-group").
-   - **NamePadding**: Number of digits in group numbering (default is 2).
-   - **EnableLogging**: Enable or disable logging to a file.
-   - **LogFilePath**: Path to the log file (default is `C:\CreateStaticGroup\GroupCreationLog.txt`).
 
 ## Usage
 
-1. **Run the Script**
+### Running the Script
 
-   ```powershell
-   .\AzureAD-DeviceGroupManagement.ps1
-   ```
+Execute the script using PowerShell:
 
-2. **Using Parameters**
+```powershell
+.\AzureAD-DeviceGroupManagement.ps1
+```
 
-   You can customize the script execution by providing parameters:
+### Parameters
 
-   ```powershell
-   .\AzureAD-DeviceGroupManagement.ps1 -BatchSize 300 -GroupNamePrefix "IntuneGroup" -NamePadding 3 -EnableLogging -LogFilePath "C:\Logs\GroupCreationLog.txt"
-   ```
+The script accepts the following parameters to customize its behavior:
 
-## Parameters
+- `-BatchSize` *(int)*: Specifies the maximum number of devices per group. Default is `500`.
 
-| Parameter          | Description                                              | Default Value                                   |
-|--------------------|----------------------------------------------------------|-------------------------------------------------|
-| `-BatchSize`       | Number of devices per group                              | `500`                                           |
-| `-GroupNamePrefix` | Prefix for the group names                               | `"Devices-group"`                               |
-| `-NamePadding`     | Number of digits in group numbering                      | `2`                                             |
-| `-EnableLogging`   | Enable logging to a file                                 | `False`                                         |
-| `-LogFilePath`     | Path to the log file                                     | `"C:\CreateStaticGroup\GroupCreationLog.txt"`   |
+  ```powershell
+  -BatchSize 300
+  ```
 
-## Script Workflow
+- `-GroupNamePrefix` *(string)*: Defines the prefix for the Azure AD group names. Default is `"Devices-group"`.
 
-1. **Module Installation and Import**: Ensures required PowerShell modules (`AzureAD` and `Microsoft.Graph`) are installed and imported.
-2. **Authentication**:
-   - **Automatic Connection to Microsoft Graph**: Automatically connects to Microsoft Graph using app-based authentication with the specified `TenantID`, `AppID`, and `AppSecret`.
-   - **Manual Connection to Azure AD**: Prompts the user to manually connect to Azure AD using user-based authentication.
-3. **Device Retrieval**: Fetches all Windows PC devices from Microsoft Intune via Microsoft Graph.
-4. **Group Retrieval and Creation**:
-   - Retrieves existing Azure AD groups with the specified prefix.
-   - Determines the next group number based on existing groups.
-   - Creates new static groups if necessary.
-5. **Device Assignment**:
-   - Adds devices to existing static groups with available space (fewer than 500 members).
-   - Creates new static groups and assigns devices if no existing groups have available space.
-6. **Logging**: Records all actions and errors to the console and optionally to a log file.
+  ```powershell
+  -GroupNamePrefix "CorporateDevices-"
+  ```
+
+- `-NamePadding` *(int)*: Determines the number of digits in the group numbering. Default is `2` (e.g., `01`, `02`, etc.).
+
+  ```powershell
+  -NamePadding 3
+  ```
+
+- `-EnableLogging` *(switch)*: Enables logging of script operations to a file.
+
+  ```powershell
+  -EnableLogging
+  ```
+
+- `-LogFilePath` *(string)*: Specifies the path to the log file. Default is `"C:\CreateStaticGroup\GroupCreationLog.txt"`.
+
+  ```powershell
+  -LogFilePath "D:\Logs\AzureADGroupManagement.log"
+  ```
+
+### Example
+
+```powershell
+.\AzureAD-DeviceGroupManagement.ps1 -BatchSize 300 -GroupNamePrefix "CorporateDevices-" -NamePadding 3 -EnableLogging -LogFilePath "D:\Logs\AzureADGroupManagement.log"
+```
+
+This command will:
+
+- Create groups with the prefix `CorporateDevices-` (e.g., `CorporateDevices-001`, `CorporateDevices-002`, etc.).
+- Assign up to `300` devices per group.
+- Use `3` digits for group numbering.
+- Enable logging and save logs to `D:\Logs\AzureADGroupManagement.log`.
 
 ## Logging
 
-- **Console Logging**: Outputs log messages with timestamps and message types (INFO, SUCCESS, WARNING, ERROR) in different colors for easy readability.
-- **File Logging**: If `-EnableLogging` is specified, logs are saved to the path defined by `-LogFilePath`.
+When the `-EnableLogging` switch is used, the script logs all operations, including successes, warnings, and errors, to the specified log file. This is useful for auditing purposes and troubleshooting any issues that arise during execution.
 
-## Troubleshooting
+**Log File Structure:**
 
-- **Module Not Found Errors**: Ensure that the `AzureAD` and `Microsoft.Graph` modules are installed and imported correctly.
-- **Authentication Issues**: Verify that you have the necessary permissions to access Microsoft Graph and Azure AD.
-- **Group Creation Failures**: Check if the group name prefix is unique and adheres to Azure AD naming conventions.
-- **Device Addition Failures**: Ensure devices exist in Intune and you have the rights to modify group memberships.
+```
+[2024-11-10 14:23:45] [INFO] Retrieving all Windows PC devices from Microsoft Graph...
+[2024-11-10 14:23:50] [SUCCESS] Total devices retrieved: 1500
+[2024-11-10 14:23:50] [INFO] Retrieving existing groups with prefix 'Devices-group'...
+[2024-11-10 14:23:55] [INFO] Next group number to create: 3
+...
+```
+
+## Notes
+
+- **Permissions**: Ensure the script is executed with appropriate permissions to access Microsoft Graph and Azure AD. This typically requires administrative privileges.
+- **Static Groups**: This script manages static group memberships exclusively and does not handle dynamic group rules or memberships.
+- **Security**: Store the App Secret and other sensitive information securely. Avoid hardcoding sensitive data directly within scripts.
+- **Modules**: The script automatically installs required Microsoft Graph modules if they are not already present on the system.
+- **Error Handling**: The script includes robust error handling to capture and log issues during execution, such as failures in group creation or device assignment.
+- **Module Installation**: If the required Microsoft Graph modules are not present, the script will attempt to install them automatically. Ensure that the executing user has the necessary permissions to install PowerShell modules.
+
 
 ## License
 
