@@ -1,17 +1,26 @@
-﻿<#
+<#
 .SYNOPSIS
     Manages static Azure AD groups by adding devices from Intune to these groups.
 
 .DESCRIPTION
-    This script automatically connects to Microsoft Graph using app-based authentication with the provided Tenant ID, App ID, and App Secret.
-    It then allows for a manual connection to Azure AD. The script checks for existing static groups with a specified prefix, creates new groups if necessary,
-    and adds devices from Intune to these groups. It ensures that no group exceeds 500 members by distributing devices across available groups
-    or creating new ones as needed.
+    This PowerShell script automates the management of static Azure Active Directory (Azure AD) groups by integrating with Microsoft Intune and Microsoft Graph. 
+    It performs the following key functions:
+    
+    - **Connection Setup**: Establishes connections to Microsoft Graph and Azure AD using the necessary modules.
+    - **Group Management**: 
+        - Identifies existing static groups with a specified prefix.
+        - Creates new groups if existing ones do not cover all devices.
+        - Ensures that each group does not exceed a predefined member limit (default is 500 members).
+    - **Device Assignment**: Retrieves devices from Intune and distributes them across the managed groups, maintaining the member limit per group.
+    - **Logging**: Optionally logs all actions and events to a specified log file for auditing and troubleshooting purposes.
+    
+    The script is designed to handle large numbers of devices efficiently by batching operations and providing informative logging. It ensures that group memberships remain organized and within Azure AD's constraints.
 
 .NOTES
-    - Ensure the script is run with the necessary permissions for Microsoft Graph and Azure AD.
-    - This script manages static groups; it does not handle dynamic group memberships.
-    - Store the App Secret securely and avoid hardcoding sensitive information in scripts.
+    - **Permissions**: Ensure the script is executed with appropriate permissions to access Microsoft Graph and Azure AD. This typically requires administrative privileges.
+    - **Static Groups**: This script manages static group memberships exclusively and does not handle dynamic group rules or memberships.
+    - **Security**: Store the App Secret and other sensitive information securely. Avoid hardcoding sensitive data directly within scripts.
+    - **Modules**: The script automatically installs required Microsoft Graph modules if they are not already present on the system.
 
 .EXAMPLE
     .\AzureAD-DeviceGroupManagement.ps1
@@ -22,7 +31,6 @@
     Date    : 2024-11-07
 #>
 
-
 # Parameters for batch processing and group management
 Param (
     [int]$BatchSize = 500,
@@ -31,11 +39,6 @@ Param (
     [switch]$EnableLogging, # Enable logging to a file
     [string]$LogFilePath = "C:\CreateStaticGroup\GroupCreationLog.txt"
 )
-
-# Automatically Connect to Microsoft Graph using App-based Authentication
-$tenantID       = "your-tenantID"          #TenantID
-$appID          = "your-appID"             #ClientID
-$appSecret      = "yourappSecret"          #Client Secret
 
 # Function to log messages with timestamps and color-coded output
 Function Log-Message {
@@ -99,69 +102,11 @@ if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Beta.DeviceManagement.
 Import-Module Microsoft.Graph.Authentication
 Import-Module Microsoft.Graph.Beta.DeviceManagement.Actions
 
-
-# Authenticate with an MFA enabled account
-Connect-MgGraph -Scopes "DeviceManagementConfiguration.ReadWrite.All"
-
-
-# Function to Connect to Microsoft Graph
-function Connect-ToGraph {
-    param (
-        [Parameter(Mandatory = $false)] [string]$Tenant,
-        [Parameter(Mandatory = $false)] [string]$AppId,
-        [Parameter(Mandatory = $false)] [string]$AppSecret,
-        [Parameter(Mandatory = $false)] [string]$Scopes = "DeviceManagementConfiguration.ReadWrite.All"
-    )
-
-    $version = (Get-Module microsoft.graph.authentication).Version.Major
-
-    if ($AppId) {
-        # App-based Authentication
-        $body = @{
-            grant_type    = "client_credentials"
-            client_id     = $AppId
-            client_secret = $AppSecret
-            scope         = "https://graph.microsoft.com/.default"
-        }
-
-        $response = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$Tenant/oauth2/v2.0/token" -Body $body
-        $accessToken = $response.access_token
-
-        if ($version -eq 2) {
-            Write-Host "Version 2 module detected" -ForegroundColor Yellow
-            $accessTokenFinal = ConvertTo-SecureString -String $accessToken -AsPlainText -Force
-        } else {
-            Write-Host "Version 1 Module Detected" -ForegroundColor Yellow
-            Select-MgProfile -Name Beta
-            $accessTokenFinal = $accessToken
-        }
-        Connect-MgGraph -AccessToken $accessTokenFinal
-        Write-Host "Connected to Intune tenant $Tenant using App-based Authentication" -ForegroundColor Green
-    } else {
-        # User-based Authentication
-        if ($version -eq 2) {
-            Write-Host "Version 2 module detected" -ForegroundColor Yellow
-        } else {
-            Write-Host "Version 1 Module Detected" -ForegroundColor Yellow
-            Select-MgProfile -Name Beta
-        }
-        Connect-MgGraph -Scopes $Scopes
-        Write-Host "Connected to Intune tenant $((Get-MgTenant).TenantId)" -ForegroundColor Green
-    }
-}
-
 # Connect to Microsoft Graph
-Connect-ToGraph -Tenant $tenantID -AppId $appID -AppSecret $appSecret
+Connect-MgGraph
 
 # Connect to Azure AD
-Log-Message "Connecting to Azure AD..." -MessageType "INFO"
-try {
-    Connect-AzureAD -ErrorAction Stop
-    Log-Message "Connected to Azure AD." -MessageType "SUCCESS"
-} catch {
-    Log-Message "Failed to connect to Azure AD: $_" -MessageType "ERROR"
-    exit
-}
+Connect-AzureAD
 
 # Function to determine the next group number based on existing groups
 Function Get-NextGroupNumber {
