@@ -1,26 +1,17 @@
-<#
+﻿<#
 .SYNOPSIS
     Manages static Azure AD groups by adding devices from Intune to these groups.
 
 .DESCRIPTION
-    This PowerShell script automates the management of static Azure Active Directory (Azure AD) groups by integrating with Microsoft Intune and Microsoft Graph. 
-    It performs the following key functions:
-    
-    - **Connection Setup**: Establishes connections to Microsoft Graph and Azure AD using the necessary modules.
-    - **Group Management**: 
-        - Identifies existing static groups with a specified prefix.
-        - Creates new groups if existing ones do not cover all devices.
-        - Ensures that each group does not exceed a predefined member limit (default is 500 members).
-    - **Device Assignment**: Retrieves devices from Intune and distributes them across the managed groups, maintaining the member limit per group.
-    - **Logging**: Optionally logs all actions and events to a specified log file for auditing and troubleshooting purposes.
-    
-    The script is designed to handle large numbers of devices efficiently by batching operations and providing informative logging. It ensures that group memberships remain organized and within Azure AD's constraints.
+    This script automatically connects to Microsoft Graph using app-based authentication with the provided Tenant ID, App ID, and App Secret.
+    It then allows for a manual connection to Azure AD. The script checks for existing static groups with a specified prefix, creates new groups if necessary,
+    and adds devices from Intune to these groups. It ensures that no group exceeds 500 members by distributing devices across available groups
+    or creating new ones as needed.
 
 .NOTES
-    - **Permissions**: Ensure the script is executed with appropriate permissions to access Microsoft Graph and Azure AD. This typically requires administrative privileges.
-    - **Static Groups**: This script manages static group memberships exclusively and does not handle dynamic group rules or memberships.
-    - **Security**: Store the App Secret and other sensitive information securely. Avoid hardcoding sensitive data directly within scripts.
-    - **Modules**: The script automatically installs required Microsoft Graph modules if they are not already present on the system.
+    - Ensure the script is run with the necessary permissions for Microsoft Graph and Azure AD.
+    - This script manages static groups; it does not handle dynamic group memberships.
+    - Store the App Secret securely and avoid hardcoding sensitive information in scripts.
 
 .EXAMPLE
     .\AzureAD-DeviceGroupManagement.ps1
@@ -28,8 +19,9 @@
 .NOTES
     Author  : Mohammad Abdulkader Omar
     Website : momar.tech
-    Date    : 2024-11-07
+    Date    : 2024-11-04
 #>
+
 
 # Parameters for batch processing and group management
 Param (
@@ -39,6 +31,7 @@ Param (
     [switch]$EnableLogging, # Enable logging to a file
     [string]$LogFilePath = "C:\CreateStaticGroup\GroupCreationLog.txt"
 )
+
 
 # Function to log messages with timestamps and color-coded output
 Function Log-Message {
@@ -67,7 +60,7 @@ Function Log-Message {
     }
 }
 
-# Connect to Microsoft Graph
+
 
 # Install and Import Microsoft Graph Modules
 Write-Host "Installing Microsoft Graph modules if required (current user scope)" -ForegroundColor Cyan
@@ -102,10 +95,11 @@ if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Beta.DeviceManagement.
 Import-Module Microsoft.Graph.Authentication
 Import-Module Microsoft.Graph.Beta.DeviceManagement.Actions
 
-# Connect to Microsoft Graph
-Connect-MgGraph
 
-# Connect to Azure AD
+# Authenticate with an MFA enabled account
+Connect-MgGraph -Scopes "DeviceManagementConfiguration.ReadWrite.All"
+
+# Connect to AzureAD
 Connect-AzureAD
 
 # Function to determine the next group number based on existing groups
@@ -191,6 +185,7 @@ Function Add-DevicesToGroup {
     }
 }
 
+
 # Main function to retrieve devices and assign them to groups
 Function Get-DevicesAndAssignToGroups {
     Log-Message "Retrieving all Windows PC devices from Microsoft Graph..." -MessageType "INFO"
@@ -206,6 +201,9 @@ Function Get-DevicesAndAssignToGroups {
         exit
     }
 
+    # Initialize hash table to track already assigned devices
+    $assignedDevices = @{}
+
     Log-Message "Retrieving existing groups with prefix '$GroupNamePrefix'..." -MessageType "INFO"
     try {
         $existingGroups = Get-AzureADGroup -Filter "startswith(DisplayName,'$GroupNamePrefix')"
@@ -218,10 +216,25 @@ Function Get-DevicesAndAssignToGroups {
     $nextGroupNumber = Get-NextGroupNumber -ExistingNames $existingGroupNames -Prefix $GroupNamePrefix -Padding $NamePadding
     Log-Message "Next group number to create: $nextGroupNumber" -MessageType "INFO"
 
-    # Split devices into batches based on BatchSize
+    # Split devices into batches while respecting the group member limit
     $deviceGroups = @()
-    for ($i = 0; $i -lt $allDevices.Count; $i += $BatchSize) {
-        $currentBatch = $allDevices[$i..([Math]::Min($i + $BatchSize - 1, $allDevices.Count - 1))]
+    $currentBatch = @()
+
+    foreach ($device in $allDevices) {
+        if (-not $assignedDevices.ContainsKey($device.Id)) {
+            $currentBatch += $device
+            $assignedDevices[$device.Id] = $true
+
+            # Start a new batch if the current batch reaches the BatchSize limit
+            if ($currentBatch.Count -eq $BatchSize) {
+                $deviceGroups += ,$currentBatch
+                $currentBatch = @()
+            }
+        }
+    }
+
+    # Add the remaining devices to the final batch
+    if ($currentBatch.Count -gt 0) {
         $deviceGroups += ,$currentBatch
     }
 
@@ -252,5 +265,13 @@ Function Get-DevicesAndAssignToGroups {
     Log-Message "All groups processed and devices assigned successfully." -MessageType "SUCCESS"
 }
 
+
+
 # Execute the main function
 Get-DevicesAndAssignToGroups
+
+
+
+
+
+
