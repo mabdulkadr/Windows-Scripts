@@ -33,7 +33,7 @@ Param (
 )
 
 # Automatically Connect to Microsoft Graph using App-based Authentication
-$tenantID =      "Yout-Tenant-Id"        #TenantID
+$tenantID =      "Your-Tenant-Id"        #TenantID
 $appID =         "Your-App-Id"           #ClientID
 $appSecret =     "Your-App-Secret"       #Client Secret
 
