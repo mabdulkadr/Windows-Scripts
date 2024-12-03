@@ -8,8 +8,10 @@ This script provides a menu-driven interface to select components and optionally
 .NOTES
 Ensure the Azure AD application has appropriate permissions for the Microsoft Graph API.
 
-.AUTHOR
-Your Name or Organization
+.NOTES
+    Author  : Mohammad Abdulkader Omar
+    Website : momar.tech
+    Date    : 2024-12-03
 #>
 
 # Define credentials
