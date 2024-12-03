@@ -13,10 +13,11 @@ Your Name or Organization
 #>
 
 # Define credentials
-$ClientId = ''
-$ClientSecret = ''
-$TenantId = ''
-$OutputDirectory = "C:\Temp"
+
+$TenantId		 = '<Your-Tenant-ID>'
+$ClientId		 = '<Your-App-ID>'
+$ClientSecret		 = '<Your-App-Secret>'
+$OutputDirectory	 = "C:\Temp"
 
 # Install required modules
 Write-Host "Installing required PowerShell modules..." -ForegroundColor Yellow
