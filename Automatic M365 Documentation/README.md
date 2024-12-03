@@ -2,7 +2,7 @@
 # Microsoft 365 Documentation Script
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
+![PowerShell](https://img.shields.io/badge/powershell-7%2B-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
 ## Overview
