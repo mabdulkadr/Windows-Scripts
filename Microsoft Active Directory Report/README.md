@@ -16,6 +16,7 @@ This PowerShell script automates the generation of an **As Built Report** for **
 - Generating reports in multiple formats (e.g., Word, HTML).
 
 This script leverages the [Microsoft AD As Built Report](https://github.com/AsBuiltReport/AsBuiltReport.Microsoft.AD#readme) for data collection and Word document generation.
+
 ---
 
 ## Features
