@@ -37,7 +37,7 @@ This script leverages the [Microsoft AD As Built Report](https://github.com/AsBu
   - Windows Server 2012 R2 or later
   - Windows 10 or later
 - **PowerShell Version**: PowerShell 5.1 or later
-- **Privileges**: Must be run with administrative privileges.
+- **Privileges**: Must be run with administrative privileges (Domain Administrator).
 
 ### Dependencies
 
