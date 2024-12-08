@@ -95,6 +95,19 @@ if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Beta.DeviceManagement.
     Write-Host "Microsoft Graph Beta Device Management Module Already Installed" -ForegroundColor Green
 }
 
+# Install Azure Powershell module if not installed
+if (-not (Get-Module -ListAvailable -Name Az)) {
+    try {
+        Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
+        Write-Host "Az Module Installed Successfully" -ForegroundColor Green
+    } catch {
+        Write-Host "Failed to Install Az Module: $($_.Exception.Message)" -ForegroundColor Red
+        exit
+    }
+} else {
+    Write-Host "Az Module Already Installed" -ForegroundColor Green
+}
+
 # Import necessary modules
 Import-Module Microsoft.Graph.Authentication
 Import-Module Microsoft.Graph.Beta.DeviceManagement.Actions
