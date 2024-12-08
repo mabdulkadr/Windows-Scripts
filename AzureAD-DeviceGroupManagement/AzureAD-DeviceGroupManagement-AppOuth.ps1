@@ -111,6 +111,7 @@ if (-not (Get-Module -ListAvailable -Name Az)) {
 # Import necessary modules
 Import-Module Microsoft.Graph.Authentication
 Import-Module Microsoft.Graph.Beta.DeviceManagement.Actions
+Import-Module Az
 
 
 # Authenticate with an MFA enabled account
