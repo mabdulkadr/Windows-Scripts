@@ -1,6 +1,7 @@
 
 # RunAsAdmin.bat
-
+![Windows](https://img.shields.io/badge/platform-Windows-green.svg)
+![Batch Script](https://img.shields.io/badge/Script-Batch-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
