@@ -61,8 +61,8 @@ function Show-Banner {
 ║                                                                  ║
 ║ 💡 Simplify IT Management and Automation                         ║
 ║ 🌐 Website:    momar.tech                                        ║
-║ 🔗 LinkedIn:   linkedin.com/in/mohammadomar                      ║
-║ 📧 Email:      contact@momar.tech                                ║
+║ 🔗 LinkedIn:   linkedin.com/in/mabdulkadr/                       ║
+║ 📧 Email:      m.abdulkadr@gmail.com                             ║
 ║                                                                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 
