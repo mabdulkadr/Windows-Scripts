@@ -302,42 +302,6 @@ Encountering issues? Here are some common problems and their solutions:
 
 ---
 
-## Explanation of Enhancements
-
-### 1. **Comprehensive Sections:**
-   - **Troubleshooting:** Added a dedicated section for troubleshooting common issues in the CLI version, with placeholders for the GUI version.
-   - **Exporting Reports:** Expanded explanations and examples for both CLI and GUI versions.
-   - **Logging:** Detailed logging mechanisms for both versions, emphasizing future enhancements for the GUI.
-
-### 2. **Detailed Usage Instructions:**
-   - **CLI Version:** Provided step-by-step instructions with examples on how to use the CLI script, including command examples and CSV formats.
-   - **GUI Version:** Included clear instructions on how to interact with the GUI, detailing each section and button functionality.
-
-### 3. **Visual Enhancements:**
-   - **Placeholder Image:** Replaced the banner placeholder with a direct link, encouraging users to update it with an actual image.
-   - **Emojis and Icons:** Utilized emojis to make the README more engaging and to visually separate different sections.
-
-### 4. **Consistency and Clarity:**
-   - **Formatting:** Ensured consistent formatting across all sections for better readability.
-   - **Code Blocks:** Used code blocks for commands and scripts to enhance clarity and usability.
-   - **Notes and Alerts:** Employed blockquotes and bold text to highlight important notes and future updates.
-
-### 5. **Future Enhancements:**
-   - **GUI Version:** Transitioned from "Coming Soon!" to a more detailed placeholder, outlining current features and upcoming enhancements.
-   - **Contribution Guidelines:** Provided clear steps and guidelines for contributing to the project, fostering community involvement.
-
-### 6. **Author Information:**
-   - **Contact Details:** Centralized contact information for easy access, ensuring users can reach out for support or inquiries.
-   - **Author Credits:** Acknowledged the author's website and professional profiles for credibility.
-
-### 7. **Licensing and Legal:**
-   - **License Section:** Included a reference to the MIT License, ensuring legal clarity for users and contributors.
-
-### 8. **Call to Action:**
-   - **Encouraging Engagement:** Closed with a motivational message, fostering a positive user experience.
-
----
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
