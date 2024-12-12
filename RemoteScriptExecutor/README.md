@@ -153,7 +153,7 @@ Before using the Remote Script Executor, ensure the following:
 > - **Custom Command Example:**
 >   ```
 >   Get-Service; Get-Process
-> ```
+>   ```
 
 ### GUI Version Usage
 
