@@ -49,14 +49,13 @@ Alternatively, use the **WBEMTest** tool to inspect the `__ProviderHostQuotaConf
 ## References
 For more details on troubleshooting WMI high handle count issues, refer to the [Microsoft Tech Community blog](https://techcommunity.microsoft.com/blog/askperf/wmi-how-to-troubleshoot-wmi-high-handle-count/375500).
 
-## Disclaimer
-This script modifies critical system settings. Test thoroughly in a non-production environment before deploying in production. The author assumes no responsibility for issues arising from the use of this script.
+---
+
+## License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
 
-## Changelog
-### v1.0
-- Initial release.
-- Added support for `MemoryPerHost` and `HandlesPerHost` configuration.
-- Included error handling and formatted output.
+**Disclaimer**: These scripts are provided as-is. Test them in a staging environment before use in production. The author is not responsible for any unintended outcomes resulting from their use.
 
