@@ -158,8 +158,9 @@ To generate a report in Word format and save it in a custom directory:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
-## Disclaimer
+---
 
-These scripts are provided "as is" without warranty of any kind. Use them at your own risk. Always test scripts in a controlled environment before deploying them in a production environment.
+**Disclaimer**: These scripts are provided as-is. Test them in a staging environment before use in production. The author is not responsible for any unintended outcomes resulting from their use.
+
