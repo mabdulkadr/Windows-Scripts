@@ -1,5 +1,9 @@
 # Update WMI Quota Configuration Script
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+
 ## Overview
 This PowerShell script is designed to modify the WMI (Windows Management Instrumentation) Provider Host Quota Configuration settings. It increases memory and handle limits to improve system performance and prevent issues related to quota exhaustion, as outlined in the [Microsoft Tech Community blog](https://techcommunity.microsoft.com/blog/askperf/wmi-how-to-troubleshoot-wmi-high-handle-count/375500).
 
