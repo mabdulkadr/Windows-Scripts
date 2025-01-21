@@ -118,11 +118,9 @@ This PowerShell-based GUI tool simplifies managing computer objects in Active Di
 
 ---
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
+## License 
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
 
-**Disclaimer**: Use these scripts at your own risk. Ensure you understand their impact before running them in a production environment. Always review and test scripts thoroughly.
+**Disclaimer**: This script is provided as-is. Test it in a staging environment before deploying it to production. The author is not responsible for any unintended outcomes resulting from its use.
