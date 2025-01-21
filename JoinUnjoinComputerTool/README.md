@@ -6,7 +6,7 @@
 
 A PowerShell-based GUI tool to manage computer objects in Active Directory (AD). This script enables users to rename a computer, delete it from AD, disjoin it from the domain, and join it to a domain in a selected Organizational Unit (OU) using LDAP queries.
 
-
+![Screenshot of the app](./JoinUnjoinComputerTool.png "Application Screenshot")
 
 ---
 
