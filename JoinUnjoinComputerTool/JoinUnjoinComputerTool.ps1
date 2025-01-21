@@ -27,15 +27,6 @@ Param(
 # FUNCTIONS
 ###############################################################################
 
-# Check if the script is running with administrator privileges
-Function Test-Admin {
-    if (-not (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        [System.Windows.MessageBox]::Show("Run this script as Administrator.", "Insufficient Privileges", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
-        Exit
-    }
-}
-Test-Admin
-
 # Temporarily relax the PowerShell execution policy for this session
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Unrestricted -Force
 
