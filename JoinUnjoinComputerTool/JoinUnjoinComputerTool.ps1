@@ -425,52 +425,59 @@ Function Show-MainGUI {
         </Border>
 
         <!-- Main Content Section -->
-        <StackPanel Grid.Row='1' Margin='20'>
-            <!-- Domain Controller Section -->
-            <StackPanel Orientation="Vertical" Margin="0,5,0,0">
-                <TextBlock Text='Domain Controller:' FontSize='13' FontWeight='Bold' Margin="0,0,0,3"/>
-                <TextBox x:Name='DomainControllerBox' Width='400' Height='25' FontSize='12' Text="$DefaultDomainController" 
-                         BorderBrush='#1E90FF' BorderThickness='1' Padding="3"/>
-            </StackPanel>
+        <StackPanel Grid.Row="1" Margin="20">
+            <!-- Form Section -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Domain Controller Row -->
+                    <RowDefinition Height="Auto"/> <!-- Domain Name Row -->
+                    <RowDefinition Height="Auto"/> <!-- Search Base Row -->
+                    <RowDefinition Height="Auto"/> <!-- Selected OU Row -->
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/> <!-- Label Column -->
+                    <ColumnDefinition Width="*"/>   <!-- Input Box Column -->
+                </Grid.ColumnDefinitions>
 
-            <!-- Domain Name Section -->
-            <StackPanel Orientation="Vertical" Margin="0,5,0,0">
-                <TextBlock Text='Domain Name:' FontSize='13' FontWeight='Bold' Margin="0,0,0,3"/>
-                <TextBox x:Name='DomainNameBox' Width='400' Height='25' FontSize='12' Text="$DefaultDomainName" 
-                         BorderBrush='#1E90FF' BorderThickness='1' Padding="3"/>
-            </StackPanel>
+                <!-- Domain Controller Section -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Domain Controller:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="DomainControllerBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainController"
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
 
-            <!-- Search Base Section -->
-            <StackPanel Orientation="Vertical" Margin="0,5,0,0">
-                <TextBlock Text='Search Base (OU):' FontSize='13' FontWeight='Bold' Margin="0,0,0,3"/>
-                <TextBox x:Name='SearchBaseBox' Width='400' Height='25' FontSize='12' Text="$DefaultSearchBase" 
-                         BorderBrush='#1E90FF' BorderThickness='1' Padding="3"/>
-            </StackPanel>
+                <!-- Domain Name Section -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Domain Name:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DomainNameBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainName"
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
 
-            <!-- Selected OU Section -->
-            <StackPanel Orientation="Vertical" Margin="0,5,0,0">
-                <TextBlock Text='Selected OU:' FontSize='13' FontWeight='Bold' Margin="0,0,0,3"/>
-                <TextBox x:Name='SelectedOUBox' Width='400' Height='25' FontSize='12' IsReadOnly='True' Background='WhiteSmoke' 
-                         BorderBrush='#1E90FF' BorderThickness='1' Padding="3"/>
-            </StackPanel>
+                <!-- Search Base Section -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+
+                <!-- Selected OU Section -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="SelectedOUBox" Width="400" Height="25" FontSize="12" IsReadOnly="True" Background="WhiteSmoke"
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+            </Grid>
 
             <!-- Buttons Section -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
-                <Button x:Name='DeleteButton' Content='Delete from AD' Width='180' Height='30' Background='#FF6347' Foreground='White' 
-                        FontSize='12' FontWeight='Bold' Margin="5"/>
-                <Button x:Name='DisjoinButton' Content='Disjoin from Domain' Width='180' Height='30' Background='#FFA500' Foreground='White' 
-                        FontSize='12' FontWeight='Bold' Margin="5"/>
-                <Button x:Name='JoinButton' Content='Join to Domain + OU' Width='180' Height='30' Background='#32CD32' Foreground='White' 
-                        FontSize='12' FontWeight='Bold' Margin="5"/>
+                <Button x:Name="DeleteButton" Content="Delete from AD" Width="180" Height="30" Background="#FF6347" Foreground="White"
+                        FontSize="12" FontWeight="Bold" Margin="5"/>
+                <Button x:Name="DisjoinButton" Content="Disjoin from Domain" Width="180" Height="30" Background="#FFA500" Foreground="White"
+                        FontSize="12" FontWeight="Bold" Margin="5"/>
+                <Button x:Name="JoinButton" Content="Join to Domain + OU" Width="180" Height="30" Background="#32CD32" Foreground="White"
+                        FontSize="12" FontWeight="Bold" Margin="5"/>
             </StackPanel>
 
             <!-- Console Section -->
             <StackPanel Orientation="Vertical" Margin="0,10,0,0">
-                <TextBlock Text='Output Console:' FontSize='14' FontWeight='Bold' Margin="0,0,0,3"/>
-                <TextBox x:Name='Console' IsReadOnly='True' Background='Black' Foreground='White' FontFamily='Consolas' FontSize='11' 
-                         TextWrapping="Wrap" VerticalScrollBarVisibility='Auto' Height='180' BorderBrush='#1E90FF' BorderThickness='1'/>
+                <TextBlock Text="Output Console:" FontSize="14" FontWeight="Bold" Margin="0,0,0,3"/>
+                <TextBox x:Name="Console" IsReadOnly="True" Background="Black" Foreground="White" FontFamily="Consolas" FontSize="11"
+                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="240" BorderBrush="#1E90FF" BorderThickness="1"/>
             </StackPanel>
         </StackPanel>
+
 
         <!-- Footer Section -->
         <Border Grid.Row='2' Background='#D3D3D3' Padding='5'>
@@ -505,6 +512,9 @@ Function Show-MainGUI {
 
         # Event Handlers
         $DeleteButton.Add_Click({
+            if (-not $Global:ADCreds) {
+                Prompt-Credentials
+            }
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
@@ -513,6 +523,9 @@ Function Show-MainGUI {
         })
 
         $DisjoinButton.Add_Click({
+            if (-not $Global:ADCreds) {
+                Prompt-Credentials
+            }
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
@@ -523,6 +536,9 @@ Function Show-MainGUI {
         })
 
         $JoinButton.Add_Click({
+            if (-not $Global:ADCreds) {
+                Prompt-Credentials
+            }
             Show-Output "Opening the Join + OU window..."
             Show-OUWindow
             $SelectedOU = $SelectedOUBox.Text.Trim()
@@ -550,7 +566,7 @@ Function Show-MainGUI {
 ###############################################################################
 
 try {
-    Prompt-Credentials
+    # Show the GUI first
     Show-MainGUI
 } catch {
     Show-Error "An unexpected error occurred: $($_.Exception.Message)"
