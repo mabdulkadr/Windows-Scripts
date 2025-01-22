@@ -17,10 +17,11 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "dc01.qassimu.local",                   # Default Domain Controller
-    [string]$DefaultDomainName = "qassimu.local",                              # Default Domain Name
-    [string]$DefaultSearchBase = "OU=Domain Computers,DC=QassimU,DC=local"     # Default Search Base
+    [string]$DefaultDomainController = "DC01.company.local",            # Default Domain Controller
+    [string]$DefaultDomainName = "company.local",                       # Default Domain Name
+    [string]$DefaultSearchBase = "OU=Computers,DC=company,DC=local"     # Default Search Base
 )
+
 
 ###############################################################################
 # FUNCTIONS
