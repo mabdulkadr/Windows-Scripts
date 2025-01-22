@@ -17,8 +17,8 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "dc01.qassimu.local",            # Default Domain Controller
-    [string]$DefaultDomainName = "qassimu.local",                       # Default Domain Name
+    [string]$DefaultDomainController = "dc01.qassimu.local",                   # Default Domain Controller
+    [string]$DefaultDomainName = "qassimu.local",                              # Default Domain Name
     [string]$DefaultSearchBase = "OU=Domain Computers,DC=QassimU,DC=local"     # Default Search Base
 )
 
@@ -287,13 +287,13 @@ Function Update-PCInfo {
         $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
 
         # Update the PC Name Block
-        $PcNameBlock.Value.Text = "Computer Name: $ComputerName"
+        $PcNameBlock.Value.Text = "Computer Name:  $ComputerName"
 
         # Update the Domain Status Block
         if ($PartOfDomain) {
-            $PcDomainStatusBlock.Value.Text = "Domain Status: Joined to '$DomainName'"
+            $PcDomainStatusBlock.Value.Text = "Domain Status:  Joined to '$DomainName'"
         } else {
-            $PcDomainStatusBlock.Value.Text = "Domain Status: Not joined to a domain (Workgroup)"
+            $PcDomainStatusBlock.Value.Text = "Domain Status:  Not joined to a domain (Workgroup)"
         }
     } catch {
         # Handle errors
@@ -404,7 +404,7 @@ Function Show-OUWindow {
         $SelectButton.Add_Click({
             $SelectedOU = $OUDataGrid.SelectedItem
             if ($SelectedOU -ne $null) {
-                $SelectedOUBox.Text = $SelectedOU.DistinguishedName
+               
                 Show-Output "Selected OU: $($SelectedOU.DistinguishedName)"
                 $OUWindow.Close()
             } else {
@@ -434,11 +434,18 @@ Function Show-OUWindow {
 
 Function Show-MainGUI {
     [xml]$XAML = @"
+
 <Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
         xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-        Title='Join / Unjoin Computer Tool' Width='700' Height='700'
-        Background='#F0F0F0' WindowStartupLocation='CenterScreen' ResizeMode='NoResize'>
+        Title='Join / Unjoin Computer Tool' 
+        Width='700' 
+        Height='700'
+        Background='#F8F8F8' 
+        WindowStartupLocation='CenterScreen' 
+        ResizeMode='NoResize'>
+
     <Grid>
+        <!-- Layout Definitions -->
         <Grid.RowDefinitions>
             <RowDefinition Height='Auto'/>   <!-- Header -->
             <RowDefinition Height='*'/>      <!-- Main Content -->
@@ -447,88 +454,100 @@ Function Show-MainGUI {
 
         <!-- Header Section -->
         <Border Grid.Row='0' Background='#1E90FF' Padding='15'>
-            <TextBlock Text='Join / Unjoin Computer Tool'
-                       Foreground='White'
-                       FontSize='20'
-                       FontWeight='Bold'
-                       HorizontalAlignment='Center'/>
-            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                
+                <TextBlock Text="Join / Unjoin Computer Tool"
+                           Foreground="White"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
         </Border>
 
         <!-- Main Content Section -->
-        <StackPanel Grid.Row="1" Margin="20">
-            <!-- Form Section -->
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/> <!-- Domain Controller Row -->
-                    <RowDefinition Height="Auto"/> <!-- Domain Name Row -->
-                    <RowDefinition Height="Auto"/> <!-- Search Base Row -->
-                    <RowDefinition Height="Auto"/> <!-- Selected OU Row -->
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150"/> <!-- Label Column -->
-                    <ColumnDefinition Width="*"/>   <!-- Input Box Column -->
-                </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="1" Margin="20" Orientation="Vertical" VerticalAlignment="Top">
 
-                <!-- Domain Controller Section -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Domain Controller:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                <TextBox Grid.Row="0" Grid.Column="1" x:Name="DomainControllerBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainController"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" IsReadOnly="True" Background="LightGray"/>
-
-                <!-- Domain Name Section -->
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Domain Name:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DomainNameBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainName"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" IsReadOnly="True" Background="LightGray"/>
-
-                <!-- Search Base Section -->
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" IsReadOnly="True" Background="LightGray"/>
-
-                <!-- Selected OU Section -->
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                <TextBox Grid.Row="3" Grid.Column="1" x:Name="SelectedOUBox" Width="400" Height="25" FontSize="12" IsReadOnly="True" Background="WhiteSmoke"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
-            </Grid>
-
-
-            <!-- PC Info Section -->
-            <Border BorderBrush="#D3D3D3" BorderThickness="1" CornerRadius="5" Padding="15" Background="#F0F8FF" Margin="0,0,0,20">
+            <!-- First Section: Domain Controller, Domain Name, Search Base OU -->
+            <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,0,0,5">
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="PC Information:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <TextBlock x:Name="PcNameBlock" Text="Computer Name: Loading..." FontSize="14" Margin="0,5,0,0"/>
-                    <TextBlock x:Name="PcDomainStatusBlock" Text="Domain Status: Loading..." FontSize="14" Margin="0,5,0,0"/>
+                    <TextBlock Text="Domain Configuration:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Domain Controller -->
+                            <RowDefinition Height="Auto"/> <!-- Domain Name -->
+                            <RowDefinition Height="Auto"/> <!-- Search Base -->
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/> <!-- Label -->
+                            <ColumnDefinition Width="*"/>   <!-- Textbox -->
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Domain Controller -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Domain Controller:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="DomainControllerBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainController"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+
+                        <!-- Domain Name -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Domain Name:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="DomainNameBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainName"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+
+                        <!-- Search Base OU -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+
+
+                    </Grid>
                 </StackPanel>
             </Border>
 
-             <!-- Buttons Section -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
-                <Button x:Name="JoinButton" Content="Join to Domain with OU" Width="180" Height="30" Background="#32CD32" Foreground="White"
-                        FontSize="12" FontWeight="Bold" Margin="5"/>
-                <Button x:Name="DisjoinButton" Content="Disjoin from Domain" Width="180" Height="30" Background="#FFA500" Foreground="White"
-                        FontSize="12" FontWeight="Bold" Margin="5"/>
-                <Button x:Name="DeleteButton" Content="Delete from AD" Width="180" Height="30" Background="#FF6347" Foreground="White"
-                        FontSize="12" FontWeight="Bold" Margin="5"/>
-            </StackPanel>
+            <!-- Second Section: PC Info -->
+            <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,5,0,5">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="PC Information:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="PcNameBlock" Text="Computer Name:  Loading..." FontSize="14" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="PcDomainStatusBlock" Text="Domain Status:  Loading..." FontSize="14" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
 
-            <!-- Console Section -->
-            <StackPanel Orientation="Vertical" Margin="0,10,0,0">
-                <TextBlock Text="Output Console:" FontSize="14" FontWeight="Bold" Margin="0,0,0,3"/>
-                <TextBox x:Name="Console" IsReadOnly="True" Background="Black" Foreground="White" FontFamily="Consolas" FontSize="11"
-                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="240" BorderBrush="#1E90FF" BorderThickness="1"/>
-            </StackPanel>
+            <!-- Third Section: Disjoin and Delete -->
+         
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="JoinButton" Content="➕ Join to Domain + OU" Width="200" Height="40" Background="#32CD32" Foreground="White"
+                                FontSize="14" FontWeight="Bold" Margin="10"/>
+                    <Button x:Name="DisjoinButton" Content="🔌 Disjoin from Domain" Width="200" Height="40" Background="#FFA500" Foreground="White"
+                            FontSize="14" FontWeight="Bold" Margin="10"/>
+                    <Button x:Name="DeleteButton" Content="🗑️ Delete from AD" Width="200" Height="40" Background="#FF6347" Foreground="White"
+                            FontSize="14" FontWeight="Bold" Margin="10"/>
+                </StackPanel>
+
+
+            <!-- Fourth Section: Console -->
+
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Output Console:" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox x:Name="Console" IsReadOnly="True" Background="Black" Foreground="White" FontFamily="Consolas" FontSize="12"
+                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="190" BorderBrush="#1E90FF" BorderThickness="1"/>
+                </StackPanel>
+
+
         </StackPanel>
-
 
         <!-- Footer Section -->
         <Border Grid.Row='2' Background='#D3D3D3' Padding='5'>
-            <TextBlock Text='© 2025 M.omar(momar.tech) - All Rights Reserved'
-                       Foreground='Black'
-                       FontSize='10'
+            <TextBlock Text='© 2025 M.omar (momar.tech) - All Rights Reserved'
+                       Foreground='Black' 
+                       FontSize='10' 
                        HorizontalAlignment='Center'/>
         </Border>
     </Grid>
 </Window>
+
+
+
+
+
 "@
 
     try {
@@ -541,7 +560,7 @@ Function Show-MainGUI {
         $DomainControllerBox = $Window.FindName('DomainControllerBox')
         $DomainNameBox = $Window.FindName('DomainNameBox')
         $SearchBaseBox = $Window.FindName('SearchBaseBox')
-        $SelectedOUBox = $Window.FindName('SelectedOUBox')
+      
         $DeleteButton = $Window.FindName('DeleteButton')
         $DisjoinButton = $Window.FindName('DisjoinButton')
         $JoinButton = $Window.FindName('JoinButton')
@@ -568,12 +587,13 @@ Function Show-MainGUI {
             $SearchBase = $SearchBaseBox.Text.Trim()
             Show-Output "Disjoining computer '$ComputerName' from domain..."
             Disjoin-ComputerFromDomain -ComputerName $ComputerName
+            Prompt-Restart
         })
 
         $JoinButton.Add_Click({
             Show-Output "Opening the Join + OU window..."
             Show-OUWindow
-            $SelectedOU = $SelectedOUBox.Text.Trim()
+           
             if ($SelectedOU -ne "") {
                 $DomainName = $DomainNameBox.Text.Trim()
                 Show-Output "Joining computer to domain '$DomainName' in OU '$SelectedOU'..."
