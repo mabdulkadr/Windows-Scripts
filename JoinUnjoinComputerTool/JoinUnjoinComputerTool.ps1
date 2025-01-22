@@ -9,7 +9,6 @@
 
 .NOTES
     Author  : Mohammad Abdulkader Omar
-    Website : momar.tech
     Date    : 2025-01-20
 #>
 
@@ -18,14 +17,26 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "DC01.company.local",            # Default Domain Controller
-    [string]$DefaultDomainName = "company.local",                       # Default Domain Name
-    [string]$DefaultSearchBase = "OU=Computers,DC=company,DC=local"     # Default Search Base
+    [string]$DefaultDomainController = "dc01.qassimu.local",            # Default Domain Controller
+    [string]$DefaultDomainName = "qassimu.local",                       # Default Domain Name
+    [string]$DefaultSearchBase = "OU=Domain Computers,DC=QassimU,DC=local"     # Default Search Base
 )
 
 ###############################################################################
 # FUNCTIONS
 ###############################################################################
+
+# Load the required WPF assemblies
+Add-Type -AssemblyName PresentationFramework
+
+# Check if the script is running with administrator privileges
+Function Test-Admin {
+    if (-not (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        [System.Windows.MessageBox]::Show("Run this script as Administrator.", "Insufficient Privileges", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+        Exit
+    }
+}
+Test-Admin
 
 # Temporarily relax the PowerShell execution policy for this session
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Unrestricted -Force
@@ -167,8 +178,6 @@ Function Delete-ComputerFromAD {
 }
 
 
-
-
 # Function to disjoin a computer from a domain
 Function Disjoin-ComputerFromDomain {
     param ([string]$ComputerName)
@@ -261,6 +270,36 @@ Function Join-ComputerWithOU {
                      Show-Error "Failed to join the computer to domain: $($_.Exception.Message)"
                     Show-Output "----------------------------------------------------------------"
     }
+    }
+}
+
+#Function to Populate PC Info
+Function Update-PCInfo {
+    param (
+        [ref]$PcNameBlock,
+        [ref]$PcDomainStatusBlock
+    )
+
+    try {
+        # Get computer information
+        $ComputerName = $env:COMPUTERNAME
+        $PartOfDomain = (Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
+        $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
+
+        # Update the PC Name Block
+        $PcNameBlock.Value.Text = "Computer Name: $ComputerName"
+
+        # Update the Domain Status Block
+        if ($PartOfDomain) {
+            $PcDomainStatusBlock.Value.Text = "Domain Status: Joined to '$DomainName'"
+        } else {
+            $PcDomainStatusBlock.Value.Text = "Domain Status: Not joined to a domain (Workgroup)"
+        }
+    } catch {
+        # Handle errors
+        $PcNameBlock.Value.Text = "Computer Name: Unable to retrieve"
+        $PcDomainStatusBlock.Value.Text = "Domain Status: Unable to retrieve"
+        Display-Message "Failed to update PC information: $($_.Exception.Message)" -Type "Error"
     }
 }
 
@@ -397,7 +436,7 @@ Function Show-MainGUI {
     [xml]$XAML = @"
 <Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
         xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-        Title='Join / Unjoin Computer Tool' Width='700' Height='620'
+        Title='Join / Unjoin Computer Tool' Width='700' Height='700'
         Background='#F0F0F0' WindowStartupLocation='CenterScreen' ResizeMode='NoResize'>
     <Grid>
         <Grid.RowDefinitions>
@@ -434,17 +473,17 @@ Function Show-MainGUI {
                 <!-- Domain Controller Section -->
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Domain Controller:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="DomainControllerBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainController"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" IsReadOnly="True" Background="LightGray"/>
 
                 <!-- Domain Name Section -->
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Domain Name:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="DomainNameBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainName"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" IsReadOnly="True" Background="LightGray"/>
 
                 <!-- Search Base Section -->
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
-                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                         BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" IsReadOnly="True" Background="LightGray"/>
 
                 <!-- Selected OU Section -->
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
@@ -452,13 +491,23 @@ Function Show-MainGUI {
                          BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
             </Grid>
 
-            <!-- Buttons Section -->
+
+            <!-- PC Info Section -->
+            <Border BorderBrush="#D3D3D3" BorderThickness="1" CornerRadius="5" Padding="15" Background="#F0F8FF" Margin="0,0,0,20">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="PC Information:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="PcNameBlock" Text="Computer Name: Loading..." FontSize="14" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="PcDomainStatusBlock" Text="Domain Status: Loading..." FontSize="14" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+             <!-- Buttons Section -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
-                <Button x:Name="DeleteButton" Content="Delete from AD" Width="180" Height="30" Background="#FF6347" Foreground="White"
+                <Button x:Name="JoinButton" Content="Join to Domain with OU" Width="180" Height="30" Background="#32CD32" Foreground="White"
                         FontSize="12" FontWeight="Bold" Margin="5"/>
                 <Button x:Name="DisjoinButton" Content="Disjoin from Domain" Width="180" Height="30" Background="#FFA500" Foreground="White"
                         FontSize="12" FontWeight="Bold" Margin="5"/>
-                <Button x:Name="JoinButton" Content="Join to Domain + OU" Width="180" Height="30" Background="#32CD32" Foreground="White"
+                <Button x:Name="DeleteButton" Content="Delete from AD" Width="180" Height="30" Background="#FF6347" Foreground="White"
                         FontSize="12" FontWeight="Bold" Margin="5"/>
             </StackPanel>
 
@@ -496,6 +545,8 @@ Function Show-MainGUI {
         $DeleteButton = $Window.FindName('DeleteButton')
         $DisjoinButton = $Window.FindName('DisjoinButton')
         $JoinButton = $Window.FindName('JoinButton')
+        $PcNameBlock = $Window.FindName('PcNameBlock')
+        $PcDomainStatusBlock = $Window.FindName('PcDomainStatusBlock')
 
         # Flush Log Buffer to Console
         foreach ($LogEntry in $LogBuffer) {
@@ -504,9 +555,6 @@ Function Show-MainGUI {
 
         # Event Handlers
         $DeleteButton.Add_Click({
-            if (-not $Global:ADCreds) {
-                Prompt-Credentials
-            }
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
@@ -515,22 +563,14 @@ Function Show-MainGUI {
         })
 
         $DisjoinButton.Add_Click({
-            if (-not $Global:ADCreds) {
-                Prompt-Credentials
-            }
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
             Show-Output "Disjoining computer '$ComputerName' from domain..."
             Disjoin-ComputerFromDomain -ComputerName $ComputerName
-            Show-Output "Deleting computer '$ComputerName' from AD..."
-            Delete-ComputerFromAD -ComputerName $ComputerName -DomainController $DomainController -SearchBase $SearchBase
         })
 
         $JoinButton.Add_Click({
-            if (-not $Global:ADCreds) {
-                Prompt-Credentials
-            }
             Show-Output "Opening the Join + OU window..."
             Show-OUWindow
             $SelectedOU = $SelectedOUBox.Text.Trim()
@@ -545,6 +585,10 @@ Function Show-MainGUI {
             }
         })
 
+
+        # Update PC Info
+        Update-PCInfo -PcNameBlock ([ref]$PcNameBlock) -PcDomainStatusBlock ([ref]$PcDomainStatusBlock)
+
         # Show the GUI
         [void]$Window.ShowDialog()
 
@@ -558,7 +602,7 @@ Function Show-MainGUI {
 ###############################################################################
 
 try {
-    # Show the GUI first
+    Prompt-Credentials
     Show-MainGUI
 } catch {
     Show-Error "An unexpected error occurred: $($_.Exception.Message)"
