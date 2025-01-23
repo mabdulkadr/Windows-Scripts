@@ -10,6 +10,12 @@ A **PowerShell-based GUI tool**, now available as a standalone `.exe`, to simpli
 
 ---
 
+## **Screenshot**
+
+![Screenshot](Screenshot.png)
+
+---
+
 ## **Features**
 
 1. **Standalone Executable (`.exe`)**:
@@ -103,11 +109,6 @@ A **PowerShell-based GUI tool**, now available as a standalone `.exe`, to simpli
 | `DefaultDomainName`       | The name of the domain.                          | `company.local`               |
 | `DefaultSearchBase`       | LDAP search base to filter Organizational Units. | `OU=Computers,DC=company,DC=local` |
 
----
-
-## **Screenshot**
-
-![Screenshot](Screenshot.png)
 
 ---
 
