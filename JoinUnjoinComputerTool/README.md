@@ -6,7 +6,7 @@
 
 This PowerShell-based GUI tool simplifies managing computer objects in Active Directory (AD). It provides functionality for disjoining computers from a domain, deleting computers from AD, and joining computers to a domain with Organizational Unit (OU) selection. The script is designed with ease of use and user experience in mind, including GUI controls, error handling, and logging.
 
-![Screenshot of the app](./JoinUnjoinComputerTool.png "Application Screenshot")
+![Screenshot of the app](./Screenshot.png "Application Screenshot")
 
 ---
 
