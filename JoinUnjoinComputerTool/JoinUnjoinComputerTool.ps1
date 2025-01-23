@@ -65,8 +65,21 @@ Function Show-Output {
     } else {
         # Append message to GUI console
         $Console.AppendText("$Message`r`n")
+        
     }
 }
+
+# Display Success messages in both message boxes and the console
+Function Show-Success {
+    param ([string]$Msg)
+    # Display the success message in a MessageBox with an Information icon
+    [System.Windows.MessageBox]::Show($Msg, "Success", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+
+    # Log the success message in the console using Show-Output
+    Show-Output "SUCCESS: $Msg"
+}
+
+
 
 # Display error messages in both message boxes and the console
 Function Show-Error {
@@ -93,22 +106,88 @@ Function Prompt-Credentials {
 
 # Prompt Restart
 Function Prompt-Restart {
-    # Ask the user if they want to restart the computer
-    $RestartConfirmation = [System.Windows.MessageBox]::Show(
-        "The computer needs to restart to complete the operation. Do you want to restart now?",
-        "Restart Required",
-        [System.Windows.MessageBoxButton]::YesNo,
-        [System.Windows.MessageBoxImage]::Question
-    )
+    [void][System.Reflection.Assembly]::LoadWithPartialName("presentationframework")
+    [void][System.Reflection.Assembly]::LoadWithPartialName("windowsbase")
+    
+    # Define the XAML for the Restart Confirmation Window
+    [xml]$RestartXAML = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Restart Confirmation" Height="200" Width="400" 
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#F8F8F8">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-    # If the user selects 'Yes', restart the computer
-    if ($RestartConfirmation -eq 'Yes') {
-        Show-Output "Restarting the computer..." "Orange"
-        Restart-Computer -Force
-    } else {
-        Show-Output "Restart postponed by the user." "Yellow"
+        <!-- Header Section -->
+        <Border Grid.Row='0' Background='#1E90FF' Padding='5'>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="Restart Confirmation" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Section -->
+        <StackPanel Grid.Row="1" Margin="10" VerticalAlignment="Center" HorizontalAlignment="Center">
+           
+            <TextBlock Text="The computer needs to restart to complete the operation." FontSize="14" TextAlignment="Center" Margin="10"/>
+            <TextBlock Text="Do you want to restart now?" FontSize="14" FontWeight="Bold" TextAlignment="Center" Margin="10"/>
+        </StackPanel>
+
+        <!-- Footer Section -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button x:Name="YesButton" Content="Yes, Restart" Width="120" Height="30" Background="#32CD32" Foreground="White" FontWeight="Bold" Margin="5"/>
+            <Button x:Name="NoButton" Content="No, Postpone" Width="120" Height="30" Background="#FF6347" Foreground="White" FontWeight="Bold" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>
+"@
+
+    try {
+        # Load the Restart Confirmation Window
+        $Reader = New-Object System.Xml.XmlNodeReader $RestartXAML
+        $RestartWindow = [System.Windows.Markup.XamlReader]::Load($Reader)
+
+        # Assign Controls
+        $YesButton = $RestartWindow.FindName('YesButton')
+        $NoButton = $RestartWindow.FindName('NoButton')
+
+        # Define Global Variable for Restart Confirmation
+        $Global:RestartConfirmed = $false
+
+        # Add Event Handlers for Buttons
+        $YesButton.Add_Click({
+            $Global:RestartConfirmed = $true
+            $RestartWindow.Close()
+        })
+
+        $NoButton.Add_Click({
+            $Global:RestartConfirmed = $false
+            $RestartWindow.Close()
+        })
+
+        # Ensure the Window Opens in the Center of the Screen
+        $RestartWindow.WindowStartupLocation = "CenterScreen"
+
+        # Show the Restart Confirmation Window
+        [void]$RestartWindow.ShowDialog()
+
+        # Check User's Choice and Restart If Necessary
+        if ($Global:RestartConfirmed) {
+            Show-Output "Restarting the computer..." "Orange"
+            Restart-Computer -Force
+        } else {
+            Show-Output "Restart postponed by the user." "Yellow"
+        }
+
+    } catch {
+        Show-Error "An error occurred in the Restart Confirmation Window: $($_.Exception.Message)"
     }
 }
+
 
 # Function to delete a computer from AD
 Function Delete-ComputerFromAD {
@@ -151,8 +230,10 @@ Function Delete-ComputerFromAD {
             $ComputerEntry = $SearchResult.GetDirectoryEntry()
             $ComputerEntry.DeleteTree()
             $ComputerEntry.CommitChanges()
+
+
             Show-Output "----------------------------------------------------------------"
-            Show-Output "Successfully deleted computer '$ComputerName' from Active Directory."
+            Show-Success "Successfully deleted computer '$ComputerName' from Active Directory."
             Show-Output "----------------------------------------------------------------"
         } else {
             Show-Output "----------------------------------------------------------------"
@@ -205,8 +286,9 @@ Function Disjoin-ComputerFromDomain {
             # Proceed with disjoin
             Remove-Computer -WorkgroupName "WORKGROUP" -Credential $Global:ADCreds -Force
             Show-Output "----------------------------------------------------------------"
-            Show-Output "Computer '$ComputerName' successfully disjoined from the domain."
+            Show-Success "Computer '$ComputerName' successfully disjoined from the domain."
             Show-Output "----------------------------------------------------------------"
+            Prompt-Restart
         } catch {
 
         # Check for specific error: "The server is not operational"
@@ -217,6 +299,7 @@ Function Disjoin-ComputerFromDomain {
         - Domain Name
         - OU Search Base"
                     Show-Output "----------------------------------------------------------------"
+                    
                 } else {
                     # Handle other unexpected errors
                     Show-Output "----------------------------------------------------------------"
@@ -250,7 +333,7 @@ Function Join-ComputerWithOU {
         # If not in the domain, proceed to join
         Add-Computer -DomainName $DomainName -OUPath $OUPath -Credential $Global:ADCreds -Force
         Show-Output "----------------------------------------------------------------"
-        Show-Output "Computer successfully joined to domain '$DomainName' in OU '$OUPath'."
+        Show-Success "Computer successfully joined to domain '$DomainName' in OU '$OUPath'."
         Show-Output "----------------------------------------------------------------"
         
         # Prompt the user to restart the computer
@@ -273,6 +356,7 @@ Function Join-ComputerWithOU {
     }
     }
 }
+
 
 #Function to Populate PC Info
 Function Update-PCInfo {
@@ -405,7 +489,7 @@ Function Show-OUWindow {
         $SelectButton.Add_Click({
             $SelectedOU = $OUDataGrid.SelectedItem
             if ($SelectedOU -ne $null) {
-               
+                $SelectedOUBox.Text = $SelectedOU.DistinguishedName
                 Show-Output "Selected OU: $($SelectedOU.DistinguishedName)"
                 $OUWindow.Close()
             } else {
@@ -477,6 +561,7 @@ Function Show-MainGUI {
                             <RowDefinition Height="Auto"/> <!-- Domain Controller -->
                             <RowDefinition Height="Auto"/> <!-- Domain Name -->
                             <RowDefinition Height="Auto"/> <!-- Search Base -->
+                            <RowDefinition Height="Auto"/> <!-- Selected OU Row -->
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="150"/> <!-- Label -->
@@ -497,7 +582,10 @@ Function Show-MainGUI {
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
                                  BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
-
+                        <!-- Selected OU Section -->
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="SelectedOUBox" Width="400" Height="25" FontSize="12" IsReadOnly="True" Background="WhiteSmoke"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
 
                     </Grid>
                 </StackPanel>
@@ -529,7 +617,7 @@ Function Show-MainGUI {
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Output Console:" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
                     <TextBox x:Name="Console" IsReadOnly="True" Background="Black" Foreground="White" FontFamily="Consolas" FontSize="12"
-                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="190" BorderBrush="#1E90FF" BorderThickness="1"/>
+                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="170" BorderBrush="#1E90FF" BorderThickness="1"/>
                 </StackPanel>
 
 
@@ -561,7 +649,7 @@ Function Show-MainGUI {
         $DomainControllerBox = $Window.FindName('DomainControllerBox')
         $DomainNameBox = $Window.FindName('DomainNameBox')
         $SearchBaseBox = $Window.FindName('SearchBaseBox')
-      
+        $SelectedOUBox = $Window.FindName('SelectedOUBox')
         $DeleteButton = $Window.FindName('DeleteButton')
         $DisjoinButton = $Window.FindName('DisjoinButton')
         $JoinButton = $Window.FindName('JoinButton')
@@ -588,13 +676,12 @@ Function Show-MainGUI {
             $SearchBase = $SearchBaseBox.Text.Trim()
             Show-Output "Disjoining computer '$ComputerName' from domain..."
             Disjoin-ComputerFromDomain -ComputerName $ComputerName
-            Prompt-Restart
         })
 
         $JoinButton.Add_Click({
             Show-Output "Opening the Join + OU window..."
             Show-OUWindow
-           
+           $SelectedOU = $SelectedOUBox.Text.Trim()
             if ($SelectedOU -ne "") {
                 $DomainName = $DomainNameBox.Text.Trim()
                 Show-Output "Joining computer to domain '$DomainName' in OU '$SelectedOU'..."
