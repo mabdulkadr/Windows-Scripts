@@ -149,13 +149,4 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 ---
 
 **Disclaimer**: This tool is provided as-is. Test it in a staging environment before deploying it to production. The author is not responsible for any unintended outcomes resulting from its use.
-```
 
-### Enhancements Made:
-- Improved organization with clear sections and headings.
-- Expanded details on features, installation, and usage.
-- Emphasized the benefits of both the standalone `.exe` and the PowerShell script.
-- Enhanced the troubleshooting section with practical advice.
-- Refined the overview for clarity and impact.
-
-Let me know if you need further adjustments!
