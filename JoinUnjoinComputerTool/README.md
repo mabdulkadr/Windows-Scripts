@@ -6,7 +6,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
 ## **Overview** 
-The Join/Unjoin Computer Tool is a user-friendly solution designed for Helpdesk teams. It combines a PowerShell script and a GUI-based standalone .exe to simplify managing computer objects in Active Directory (AD).
+The **Join/Unjoin Computer Tool** is a user-friendly solution designed for Helpdesk teams. It combines a PowerShell script and a GUI-based standalone .exe to simplify managing computer objects in Active Directory (AD).
 This tool allows Helpdesk teams to:
 Delete computers from AD.
 Disjoin computers from a domain.
