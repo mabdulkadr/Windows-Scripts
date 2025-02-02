@@ -28,6 +28,11 @@ $Server = "dc01.example.com"
 # Log file location
 $LogFile = "C:\ShadowGroups\ShadowGroup.log"
 
+# Ensure log file exists
+If (!(Test-Path $LogFile)) {
+    New-Item -ItemType File -Path $LogFile -Force | Out-Null
+}
+
 # Enable/Disable actual modifications (True applies changes, False logs only)
 $Update = $true
 
