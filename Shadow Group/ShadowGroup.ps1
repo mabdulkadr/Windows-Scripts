@@ -13,9 +13,10 @@
     Runs the script with predefined settings to update the shadow group.
 
 .NOTES
-    Modified By:
-    Website:
-    Date:
+    Author  : Mohammad Abdelkader
+    Website : momar.tech
+    Date    : 2025-02-02
+    Version : 1.0
 #>
 
 ###############################################################################
