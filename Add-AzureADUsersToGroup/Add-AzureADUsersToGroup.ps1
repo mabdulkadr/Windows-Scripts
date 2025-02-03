@@ -1,8 +1,9 @@
-﻿<#
+<#
 .SYNOPSIS
     This script adds users from a CSV file to an Azure AD Security Group using the AzureAD PowerShell module.
 
 .DESCRIPTION
+    - Ensures the required AzureAD module is installed before execution.
     - Reads a list of users from a CSV file.
     - Checks if each user exists in Azure AD before adding them to the group.
     - Verifies if the user is already a member of the group to prevent duplicate additions.
@@ -36,17 +37,34 @@
     Author  : Mohammad Abdulkader Omar
     Website : momar.tech
     Date    : 2024-11-04
-    
 #>
 
+# Ensure AzureAD module is installed
+if (-not (Get-Module -ListAvailable -Name AzureAD)) {
+    Write-Host "AzureAD module not found. Installing..." -ForegroundColor Yellow
+    Install-Module -Name AzureAD -Force -Confirm:$false
+}
+
+# Import AzureAD module
+Import-Module AzureAD -ErrorAction Stop
+
 # Connect to Azure AD
-Connect-AzureAD
+if (-not (Get-AzureADTenantDetail -ErrorAction SilentlyContinue)) {
+    Write-Host "Connecting to Azure AD..." -ForegroundColor Yellow
+    Connect-AzureAD
+}
 
 # Define Security Group ID (Replace with actual ObjectId)
 $GroupID = "your-group-id" # Change this to your actual Group ObjectId
 
 # Define CSV file path (Ensure it contains a column named 'UPN')
 $CSVFilePath = "C:\Users.csv"
+
+# Check if the CSV file exists
+if (-not (Test-Path $CSVFilePath)) {
+    Write-Host "Error: CSV file not found at $CSVFilePath" -ForegroundColor Red
+    Exit
+}
 
 # Import CSV file
 $Users = Import-Csv -Path $CSVFilePath -Delimiter ","
