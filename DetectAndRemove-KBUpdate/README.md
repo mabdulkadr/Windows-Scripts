@@ -43,6 +43,9 @@ Uninstalls the specified KB update if it is detected.
 - **Uninstalls the KB update silently.**
 - **A restart may be required** after removal.
 
+## Important Note
+- **You must change the KB number** in both `Detect-KBUpdate.ps1` and `Remediate-KBUpdate.ps1` before deploying to ensure it targets the correct update.
+
 ## How to Deploy via Intune
 1. **Go to Intune Admin Center** ([https://intune.microsoft.com/](https://intune.microsoft.com/)).
 2. Navigate to **Devices > Scripts and Remediations**.
