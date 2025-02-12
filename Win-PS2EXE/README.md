@@ -8,6 +8,10 @@
 ## Overview
 **Win-PS2EXE** is a user-friendly **Graphical User Interface (GUI)** tool that allows you to convert PowerShell scripts (`.ps1`) into standalone Windows executables (`.exe`). With a few clicks, you can package PowerShell scripts as self-contained executables, configure runtime settings, and secure your scripts without needing to run complex commands.
 
+## **Screenshot**
+
+![Screenshot](Screenshot.png)
+
 ---
 
 ## Features
