@@ -35,9 +35,8 @@ Install-Module -Name ps2exe -Scope CurrentUser
 ```
 
 ### **Option 2: Manual Download**
-1. Navigate to the **Win-PS2EXE GitHub Repository**:
-2. Download **`Win-PS2EXE.exe`** and **`PS2EXE.ps1`**.
-3. Ensure **PS2EXE.ps1** is in the same directory as **Win-PS2EXE.exe** before running.
+1. Download **`Win-PS2EXE.exe`** and **`PS2EXE.ps1`**.
+2. Ensure **PS2EXE.ps1** is in the same directory as **Win-PS2EXE.exe** before running.
 
 ---
 
