@@ -3,6 +3,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
+![PowerShell](https://img.shields.io/badge/gui-supported-green.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
 ## **Overview** 
