@@ -23,6 +23,7 @@ Param(
 )
 
 
+
 ###############################################################################
 # FUNCTIONS
 ###############################################################################
@@ -42,11 +43,11 @@ Test-Admin
 # Temporarily relax the PowerShell execution policy for this session
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Unrestricted -Force
 
-# Global variable to store AD credentials
-$Global:ADCreds = $null
-
 # Log buffer to capture messages before GUI is loaded
 $LogBuffer = @()
+
+# Global variable to store AD credentials
+$Global:ADCreds = $null
 
 # Utility to log output before GUI is loaded
 Function Buffer-Log {
@@ -79,8 +80,6 @@ Function Show-Success {
     Show-Output "SUCCESS: $Msg"
 }
 
-
-
 # Display error messages in both message boxes and the console
 Function Show-Error {
     param ([string]$Msg)
@@ -88,19 +87,104 @@ Function Show-Error {
     Show-Output "ERROR: $Msg"
 }
 
-# Prompt for AD credentials
+# Global variable to store AD credentials
+$Global:ADCreds = $Global:ADCreds  # Ensure it exists
+
 Function Prompt-Credentials {
+    [CmdletBinding()]
+    param ()
+
+    # If credentials are already stored, return them.
+    if ($Global:ADCreds -and $Global:ADCreds.UserName) {
+        return $Global:ADCreds
+    }
+
+    # Load WPF assembly
+    [void][System.Reflection.Assembly]::LoadWithPartialName("presentationframework")
+    
+    # Define XAML for a simple credentials window (username and password only)
+    [xml]$xaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Enter Credentials" Height="250" Width="400" 
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Enter AD Credentials" 
+                   FontSize="18" FontWeight="Bold" 
+                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <Label Content="Username:" Width="100"/>
+            <TextBox x:Name="UsernameBox" Width="250"/>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <Label Content="Password:" Width="100"/>
+            <PasswordBox x:Name="PasswordBox" Width="250"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button x:Name="OkButton" Content="OK" Width="100" Margin="10,0"/>
+            <Button x:Name="CancelButton" Content="Cancel" Width="100" Margin="10,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
+"@
+
     try {
-        Show-Output "Prompting for Active Directory credentials..."
-        $Global:ADCreds = Get-Credential -Message "Enter Active Directory credentials"
-        if (-not $Global:ADCreds) {
-            Show-Error "No credentials were entered. Exiting script."
-            Exit
-        }
-        Show-Output "Credentials successfully entered."
-    } catch {
-        Show-Error "Failed to enter credentials: $($_.Exception.Message)"
-        Exit
+        $reader = New-Object System.Xml.XmlNodeReader $xaml
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+        $usernameBox = $window.FindName("UsernameBox")
+        $passwordBox = $window.FindName("PasswordBox")
+        $okButton = $window.FindName("OkButton")
+        $cancelButton = $window.FindName("CancelButton")
+        
+        # Reset the global credential variable (optional, if you want to force re-prompt)
+        $Global:ADCreds = $null
+
+        # OK Button event: Validate AD credentials using an LDAP bind
+        $okButton.Add_Click({
+            if (-not $usernameBox.Text -or -not $passwordBox.Password) {
+                [System.Windows.MessageBox]::Show("Username and Password required.")
+                return
+            }
+            try {
+                $secPwd = ConvertTo-SecureString $passwordBox.Password -AsPlainText -Force
+                $cred = New-Object System.Management.Automation.PSCredential ($usernameBox.Text, $secPwd)
+            }
+            catch {
+                [System.Windows.MessageBox]::Show("Error creating credentials.")
+                return
+            }
+            
+            try {
+                # Validate credentials via LDAP bind to RootDSE
+                $ldapPath = "LDAP://RootDSE"
+                $entry = New-Object System.DirectoryServices.DirectoryEntry($ldapPath, $cred.UserName, $cred.GetNetworkCredential().Password)
+                $null = $entry.NativeObject  # Force the bind; exception if validation fails
+                [System.Windows.MessageBox]::Show("Domain credentials validated.")
+                $Global:ADCreds = $cred
+                $window.Close()
+            }
+            catch {
+                [System.Windows.MessageBox]::Show("Domain credential validation failed.")
+            }
+        })
+        
+        # Cancel Button event: Close the window without storing credentials
+        $cancelButton.Add_Click({
+            $Global:ADCreds = $null
+            $window.Close()
+        })
+        
+        [void]$window.ShowDialog()
+        return $Global:ADCreds
+    }
+    catch {
+        Write-Error $_.Exception.Message
     }
 }
 
@@ -188,7 +272,6 @@ Function Prompt-Restart {
     }
 }
 
-
 # Function to delete a computer from AD
 Function Delete-ComputerFromAD {
     param (
@@ -197,10 +280,14 @@ Function Delete-ComputerFromAD {
         [string]$SearchBase
     )
     try {
-
+        # If AD credentials haven't been set, prompt for them.
         if (-not $Global:ADCreds) {
-            Show-Error "No credentials provided. Please authenticate first."
-            return
+            Show-Output "Credentials not found. Prompting for credentials..."
+            $Global:ADCreds = Prompt-Credentials
+            if (-not $Global:ADCreds) {
+                Show-Error "No credentials provided. Exiting function."
+                return
+            }
         }
 
         # Show confirmation dialog
@@ -219,18 +306,32 @@ Function Delete-ComputerFromAD {
             return
         }
 
-        # Proceed with deletion
+        # Build the LDAP path using the provided Domain Controller and Search Base.
         $LDAPPath = "LDAP://$DomainController/$SearchBase"
-        $DirectoryEntry = New-Object DirectoryServices.DirectoryEntry($LDAPPath, $Global:ADCreds.UserName, $Global:ADCreds.GetNetworkCredential().Password)
-        $Searcher = New-Object DirectoryServices.DirectorySearcher($DirectoryEntry)
+        $DirectoryEntry = New-Object System.DirectoryServices.DirectoryEntry($LDAPPath, $Global:ADCreds.UserName, $Global:ADCreds.GetNetworkCredential().Password)
+        $Searcher = New-Object System.DirectoryServices.DirectorySearcher($DirectoryEntry)
+        # Search using sAMAccountName; note the trailing '$' for computer objects.
         $Searcher.Filter = "(sAMAccountName=$ComputerName`$)"
         $SearchResult = $Searcher.FindOne()
 
         if ($SearchResult) {
             $ComputerEntry = $SearchResult.GetDirectoryEntry()
+            # Retrieve userAccountControl attribute.
+            $uac = $ComputerEntry.Properties["userAccountControl"].Value
+            # The ACCOUNTDISABLE flag has a value of 2.
+            $ACCOUNTDISABLE = 2
+
+            # If the account is NOT disabled, we assume it is active (joined to the domain).
+            if (-not ($uac -band $ACCOUNTDISABLE)) {
+                Show-Output "----------------------------------------------------------------"
+                Show-Error "Deletion aborted: The computer '$ComputerName' appears to be active (joined to a domain)."
+                Show-Output "----------------------------------------------------------------"
+                return
+            }
+
+            # Proceed with deletion since the account appears disabled.
             $ComputerEntry.DeleteTree()
             $ComputerEntry.CommitChanges()
-
 
             Show-Output "----------------------------------------------------------------"
             Show-Success "Successfully deleted computer '$ComputerName' from Active Directory."
@@ -240,25 +341,23 @@ Function Delete-ComputerFromAD {
             Show-Output "Computer '$ComputerName' was not found in Active Directory."
             Show-Output "----------------------------------------------------------------"
         }
-    } catch {
-
-            # Check for specific error: "The server is not operational"
-                if ($_.Exception.Message -match "The server is not operational") {
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to connect to Active Directory. Please check and update the following:
-        - Domain Controller
-        - Domain Name
-        - OU Search Base"
-                    Show-Output "----------------------------------------------------------------"
-                } else {
-                    # Handle other unexpected errors
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to delete the computer from Active Directory: $($_.Exception.Message)"
-                    Show-Output "----------------------------------------------------------------"
-                }
+    }
+    catch {
+        if ($_.Exception.Message -match "The server is not operational") {
+            Show-Output "----------------------------------------------------------------"
+            Show-Error "Failed to connect to Active Directory. Please check and update the following:
+    - Domain Controller
+    - Domain Name
+    - OU Search Base"
+            Show-Output "----------------------------------------------------------------"
+        }
+        else {
+            Show-Output "----------------------------------------------------------------"
+            Show-Error "Failed to delete the computer from Active Directory: $($_.Exception.Message)"
+            Show-Output "----------------------------------------------------------------"
+        }
     }
 }
-
 
 # Function to disjoin a computer from a domain
 Function Disjoin-ComputerFromDomain {
@@ -288,6 +387,8 @@ Function Disjoin-ComputerFromDomain {
             Show-Output "----------------------------------------------------------------"
             Show-Success "Computer '$ComputerName' successfully disjoined from the domain."
             Show-Output "----------------------------------------------------------------"
+            
+            # Prompt the user to restart the computer
             Prompt-Restart
         } catch {
 
@@ -335,9 +436,10 @@ Function Join-ComputerWithOU {
         Show-Output "----------------------------------------------------------------"
         Show-Success "Computer successfully joined to domain '$DomainName' in OU '$OUPath'."
         Show-Output "----------------------------------------------------------------"
-        
+
         # Prompt the user to restart the computer
         Prompt-Restart
+        
     } catch {
 
     # Check for specific error: "The server is not operational"
@@ -346,7 +448,8 @@ Function Join-ComputerWithOU {
                     Show-Error "Failed to connect to Active Directory. Please check and update the following:
         - Domain Controller
         - Domain Name
-        - OU Search Base"
+        - OU Search Base
+        - AD Credential"
                     Show-Output "----------------------------------------------------------------"
                 } else {
                     # Handle other unexpected errors
@@ -356,7 +459,6 @@ Function Join-ComputerWithOU {
     }
     }
 }
-
 
 #Function to Populate PC Info
 Function Update-PCInfo {
@@ -582,10 +684,11 @@ Function Show-MainGUI {
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
                                  BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+
                         <!-- Selected OU Section -->
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5" Visibility="Collapsed"/>
                         <TextBox Grid.Row="3" Grid.Column="1" x:Name="SelectedOUBox" Width="400" Height="25" FontSize="12" IsReadOnly="True" Background="WhiteSmoke"
-                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" Visibility="Collapsed"/>
 
                     </Grid>
                 </StackPanel>
@@ -594,7 +697,7 @@ Function Show-MainGUI {
             <!-- Second Section: PC Info -->
             <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,5,0,5">
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="PC Information:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <TextBlock Text="PC Info:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                     <TextBlock x:Name="PcNameBlock" Text="Computer Name:  Loading..." FontSize="14" Margin="0,5,0,0"/>
                     <TextBlock x:Name="PcDomainStatusBlock" Text="Domain Status:  Loading..." FontSize="14" Margin="0,5,0,0"/>
                 </StackPanel>
@@ -663,6 +766,7 @@ Function Show-MainGUI {
 
         # Event Handlers
         $DeleteButton.Add_Click({
+            Prompt-Credentials
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
@@ -671,6 +775,7 @@ Function Show-MainGUI {
         })
 
         $DisjoinButton.Add_Click({
+            Prompt-Credentials
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
@@ -679,6 +784,7 @@ Function Show-MainGUI {
         })
 
         $JoinButton.Add_Click({
+            Prompt-Credentials
             Show-Output "Opening the Join + OU window..."
             Show-OUWindow
            $SelectedOU = $SelectedOUBox.Text.Trim()
@@ -693,12 +799,12 @@ Function Show-MainGUI {
             }
         })
 
-
         # Update PC Info
         Update-PCInfo -PcNameBlock ([ref]$PcNameBlock) -PcDomainStatusBlock ([ref]$PcDomainStatusBlock)
-
+        
         # Show the GUI
         [void]$Window.ShowDialog()
+        
 
     } catch {
         Show-Error "Failed to initialize GUI: $($_.Exception.Message)"
@@ -710,7 +816,6 @@ Function Show-MainGUI {
 ###############################################################################
 
 try {
-    Prompt-Credentials
     Show-MainGUI
 } catch {
     Show-Error "An unexpected error occurred: $($_.Exception.Message)"
