@@ -17,11 +17,10 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "DC01.company.local",                  # Default Domain Controller
-    [string]$DefaultDomainName       = "company.local",                       # Default Domain Name
-    [string]$DefaultSearchBase       = "OU=Computers,DC=company,DC=local"     # Default Search Base
+    [string]$DefaultDomainController = "winsrv01.osrah.sa",            # Default Domain Controller
+    [string]$DefaultDomainName = "osrah.sa",                       # Default Domain Name
+    [string]$DefaultSearchBase = "OU=Computers,OU=Osrah,DC=osrah,DC=sa"     # Default Search Base
 )
-
 
 
 # Load the required WPF assemblies
@@ -507,7 +506,7 @@ Function Update-PCInfo {
                     }
                 }
             } catch {
-                Write-Host "DEBUG: SCCM Co-Management Registry Read Error -> $($_.Exception.Message)" -ForegroundColor Red
+                 Show-WPFMessage -Message "DEBUG: SCCM Co-Management Registry Read Error -> $($_.Exception.Message)" -Title "Error" -Color Red
             }
         }
 
@@ -521,13 +520,9 @@ Function Update-PCInfo {
                     $CoManagementColor = "#28A745"  # Green
                 }
             } catch {
-                Write-Host "DEBUG: Intune Auto Enrollment Registry Read Error -> $($_.Exception.Message)" -ForegroundColor Red
+                 Show-WPFMessage -Message "DEBUG: Intune Auto Enrollment Registry Read Error -> $($_.Exception.Message)" -Title "Error" -Color Red
             }
         }
-
-        # **Return Co-Management Status**
-        Write-Host "Co-Management Status: $CoManagementStatus" -ForegroundColor Cyan
-
 
 
         # Update UI Elements
@@ -583,7 +578,7 @@ Function Join-ComputerWithOU {
         Add-Computer -DomainName $DomainName -OUPath $OUPath -Credential $Global:ADCreds -Force
         Show-WPFMessage -Message "Computer successfully joined to domain
         - Domain :  $DomainName
-        - OU        :  $OUPath." -Title "Success" -Color Green
+        - OU       :  $OUPath." -Title "Success" -Color Green
         Update-PCInfo
         Prompt-Restart
         
@@ -729,6 +724,7 @@ Function Join-EntraID {
         
         Start-Process -FilePath "C:\Windows\System32\dsregcmd.exe" -ArgumentList "/join" -NoNewWindow -Wait
         Show-WPFMessage -Message "Device successfully joined to Entra ID." -Title "Success" -Color Green
+        Update-PCInfo
     } catch {
         Show-WPFMessage -Message "Failed to join Entra ID: $($_.Exception.Message)" -Title "Error" -Color Red
     }
@@ -746,6 +742,7 @@ Function Disjoin-EntraID {
         
         Start-Process -FilePath "C:\Windows\System32\dsregcmd.exe" -ArgumentList "/leave" -NoNewWindow -Wait
         Show-WPFMessage -Message "Device removed from Entra ID." -Title "Success" -Color Red
+        Update-PCInfo
     } catch {
         Show-WPFMessage -Message "Failed to remove from Entra ID: $($_.Exception.Message)" -Title "Error" -Color Red
     }
@@ -762,6 +759,7 @@ Function Join-IntuneAsPersonalDevice {
         }
         Start-Process "ms-device-enrollment:?mode=mdm"
         Show-WPFMessage -Message "Opening Intune enrollment page. Follow the steps to complete enrollment." -Title "Intune Enrollment" -Color Blue
+        Update-PCInfo
     } catch {
         Show-WPFMessage -Message "Failed to launch Intune enrollment: $($_.Exception.Message)" -Title "Error" -Color Red
     }
