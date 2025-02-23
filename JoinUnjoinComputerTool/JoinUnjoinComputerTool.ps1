@@ -17,28 +17,15 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "DC01.company.local",            # Default Domain Controller
-    [string]$DefaultDomainName = "company.local",                       # Default Domain Name
-    [string]$DefaultSearchBase = "OU=Computers,DC=company,DC=local"     # Default Search Base
+    [string]$DefaultDomainController = "DC01.company.local",                  # Default Domain Controller
+    [string]$DefaultDomainName       = "company.local",                       # Default Domain Name
+    [string]$DefaultSearchBase       = "OU=Computers,DC=company,DC=local"     # Default Search Base
 )
 
 
 
-###############################################################################
-# FUNCTIONS
-###############################################################################
-
 # Load the required WPF assemblies
 Add-Type -AssemblyName PresentationFramework
-
-# Check if the script is running with administrator privileges
-Function Test-Admin {
-    if (-not (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        [System.Windows.MessageBox]::Show("Run this script as Administrator.", "Insufficient Privileges", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
-        Exit
-    }
-}
-Test-Admin
 
 # Temporarily relax the PowerShell execution policy for this session
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Unrestricted -Force
@@ -49,47 +36,210 @@ $LogBuffer = @()
 # Global variable to store AD credentials
 $Global:ADCreds = $null
 
-# Utility to log output before GUI is loaded
-Function Buffer-Log {
-    param ([string]$Message)
-    $LogBuffer += $Message
-    Write-Host $Message
-}
-
-# Display logs in the GUI console
-Function Show-Output {
-    param ([string]$Message)
-
-    # If GUI console is not ready, buffer the message
-    if (-not $Console) {
-        Buffer-Log $Message
-    } else {
-        # Append message to GUI console
-        $Console.AppendText("$Message`r`n")
-        
-    }
-}
-
-# Display Success messages in both message boxes and the console
-Function Show-Success {
-    param ([string]$Msg)
-    # Display the success message in a MessageBox with an Information icon
-    [System.Windows.MessageBox]::Show($Msg, "Success", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
-
-    # Log the success message in the console using Show-Output
-    Show-Output "SUCCESS: $Msg"
-}
-
-# Display error messages in both message boxes and the console
-Function Show-Error {
-    param ([string]$Msg)
-    [System.Windows.MessageBox]::Show($Msg, "Error", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
-    Show-Output "ERROR: $Msg"
-}
-
 # Global variable to store AD credentials
 $Global:ADCreds = $Global:ADCreds  # Ensure it exists
 
+###############################################################################
+# FUNCTIONS
+###############################################################################
+
+# Show-WPFMessage function
+Function Show-WPFMessage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Title = "Message",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Green","Orange","Red","Blue")]
+        [string]$Color = "Red"
+    )
+
+    # Load the PresentationFramework assembly if not already loaded
+    Add-Type -AssemblyName PresentationFramework
+
+    # Map the Color parameter to a hex value for the header background
+    switch ($Color) {
+        "Green"  { $HeaderColor = "#28A745" }  # typical green
+        "Orange" { $HeaderColor = "#FFA500" }  # typical orange
+        "Red"    { $HeaderColor = "#DC3545" }  # typical red
+        "Blue"   { $HeaderColor = "#0078D7" }  # Windows 10 accent blue
+    }
+
+    # Window has no standard chrome/title bar. We draw our own rounded border.
+    $xamlString = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height"
+        Width="600">
+  
+    
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Section -->
+            <Border Grid.Row="0" Background="$HeaderColor"  Padding="10">
+                <TextBlock Text="$Title"
+                           Foreground="White"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Message Section -->
+            <TextBlock Grid.Row="1"
+                       x:Name="txtMessage"
+                       TextWrapping="Wrap"
+                       Margin="20"
+                       FontSize="14"
+                       Foreground="#333333"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+
+            <!-- Button Section -->
+            <Button Grid.Row="2"
+                    x:Name="btnOK"
+                    Content="OK"
+                    Width="80"
+                    Height="30"
+                    Margin="10"
+                    HorizontalAlignment="Center"
+                    Background="$HeaderColor"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    BorderThickness="0"
+                    Cursor="Hand"/>
+        </Grid>
+
+</Window>
+"@
+
+    try {
+        # Convert the XAML string into an XML document
+        $xamlXml = [xml]$xamlString
+        
+        # Create an XmlNodeReader to read the XML document
+        $reader = New-Object System.Xml.XmlNodeReader($xamlXml)
+        
+        # Load the WPF window from the XAML
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
+        # Set the message text
+        $txtMessage = $window.FindName("txtMessage")
+        $txtMessage.Text = $Message
+
+        # Close the window when the OK button is clicked
+        $btnOK = $window.FindName("btnOK")
+        $btnOK.Add_Click({ $window.Close() })
+
+        # Show the window as a modal dialog
+        [void]$window.ShowDialog()
+    }
+    catch {
+        Write-Error "Failed to show message: $($_.Exception.Message)"
+    }
+}
+
+Function Show-WPFConfirmation {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Title = "Confirmation",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Green", "Orange", "Red", "Blue")]
+        [string]$Color = "Blue"
+    )
+
+    # Load PresentationFramework assembly.
+    Add-Type -AssemblyName PresentationFramework
+
+    # Map the Color parameter to a hex value.
+    switch ($Color) {
+        "Green"  { $HeaderColor = "#28A745" }
+        "Orange" { $HeaderColor = "#FFA500" }
+        "Red"    { $HeaderColor = "#DC3545" }
+        "Blue"   { $HeaderColor = "#0078D7" }
+    }
+
+    # XAML for the confirmation dialog.
+    $xamlString = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="WidthAndHeight">
+  
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <!-- Header Section -->
+      <Border Grid.Row="0" Background="$HeaderColor" Padding="10">
+        <TextBlock Text="$Title" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+      </Border>
+      <!-- Message Section -->
+      <TextBlock Grid.Row="1" x:Name="txtMessage" TextWrapping="Wrap" Margin="20" FontSize="14" Foreground="#333333" HorizontalAlignment="Center" VerticalAlignment="Center" Text="$Message"/>
+      <!-- Button Section -->
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+        <Button x:Name="btnYes" Content="Yes" Width="80" Height="30" Margin="10" Background="$HeaderColor" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+        <Button x:Name="btnNo" Content="No" Width="80" Height="30" Margin="10" Background="$HeaderColor" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+      </StackPanel>
+    </Grid>
+</Window>
+"@
+
+    try {
+        $xamlXml = [xml]$xamlString
+        $reader = New-Object System.Xml.XmlNodeReader($xamlXml)
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
+        # Attach event handlers that set the window's DialogResult.
+        $btnYes = $window.FindName("btnYes")
+        $btnNo  = $window.FindName("btnNo")
+
+        $btnYes.Add_Click({
+            $window.DialogResult = $true
+            $window.Close()
+        })
+        $btnNo.Add_Click({
+            $window.DialogResult = $false
+            $window.Close()
+        })
+
+        [void]$window.ShowDialog()
+        return $window.DialogResult
+    }
+    catch {
+        Write-Error "Failed to show confirmation: $($_.Exception.Message)"
+    }
+}
+
+# Check if the script is running with administrator privileges
+Function Test-Admin {
+    if (-not (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+       Show-WPFMessage -Message "Run this script as Administrator." -Title "Insufficient Privileges" -Color Red
+        Exit
+    }
+}
+
+
+# Prompt Restart AD -Credentials
 Function Prompt-Credentials {
     [CmdletBinding()]
     param ()
@@ -99,82 +249,109 @@ Function Prompt-Credentials {
         return $Global:ADCreds
     }
 
-    # Load WPF assembly
+    # Load the WPF assembly.
     [void][System.Reflection.Assembly]::LoadWithPartialName("presentationframework")
     
-    # Define XAML for a simple credentials window (username and password only)
-    [xml]$xaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    # Define a header color for consistency.
+    $HeaderColor = "#0078D7"  # Windows 10 accent blue; adjust as needed
+
+    # Revised XAML: a root Grid is defined so that control layout works as expected.
+    $xamlString = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Enter Credentials" Height="250" Width="400" 
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
-    <Grid Margin="10">
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="WidthAndHeight">
+
+      <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="Enter AD Credentials" 
-                   FontSize="18" FontWeight="Bold" 
-                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-            <Label Content="Username:" Width="100"/>
+        <!-- Header Section -->
+        <Border Grid.Row="0" Background="$HeaderColor" Padding="10">
+          <TextBlock Text="Enter AD Credentials"
+                     Foreground="White"
+                     FontSize="16"
+                     FontWeight="Bold"
+                     HorizontalAlignment="Center"/>
+        </Border>
+        <!-- Fields Section -->
+        <StackPanel Grid.Row="1" Margin="20">
+          <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+            <Label Content="Username:" Width="100" VerticalAlignment="Center"/>
             <TextBox x:Name="UsernameBox" Width="250"/>
-        </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
-            <Label Content="Password:" Width="100"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+            <Label Content="Password:" Width="100" VerticalAlignment="Center"/>
             <PasswordBox x:Name="PasswordBox" Width="250"/>
+          </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
-            <Button x:Name="OkButton" Content="OK" Width="100" Margin="10,0"/>
-            <Button x:Name="CancelButton" Content="Cancel" Width="100" Margin="10,0"/>
+        <!-- Buttons Section -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+          <Button x:Name="OkButton" Content="OK" Width="100" Height="30" Margin="10" Background="$HeaderColor" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+          <Button x:Name="CancelButton" Content="Cancel" Width="100" Height="30" Margin="10" Background="$HeaderColor" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
         </StackPanel>
-    </Grid>
+      </Grid>
+
 </Window>
 "@
 
     try {
-        $reader = New-Object System.Xml.XmlNodeReader $xaml
+        # Convert the XAML string into an XML document and load the window.
+        $xamlXml = [xml]$xamlString
+        $reader = New-Object System.Xml.XmlNodeReader($xamlXml)
         $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
+        # Retrieve controls by name.
         $usernameBox = $window.FindName("UsernameBox")
         $passwordBox = $window.FindName("PasswordBox")
-        $okButton = $window.FindName("OkButton")
+        $okButton     = $window.FindName("OkButton")
         $cancelButton = $window.FindName("CancelButton")
         
-        # Reset the global credential variable (optional, if you want to force re-prompt)
+        # Reset global credential variable.
         $Global:ADCreds = $null
 
-        # OK Button event: Validate AD credentials using an LDAP bind
-        $okButton.Add_Click({
-            if (-not $usernameBox.Text -or -not $passwordBox.Password) {
-                [System.Windows.MessageBox]::Show("Username and Password required.")
-                return
-            }
-            try {
-                $secPwd = ConvertTo-SecureString $passwordBox.Password -AsPlainText -Force
-                $cred = New-Object System.Management.Automation.PSCredential ($usernameBox.Text, $secPwd)
-            }
-            catch {
-                [System.Windows.MessageBox]::Show("Error creating credentials.")
-                return
-            }
-            
-            try {
-                # Validate credentials via LDAP bind to RootDSE
-                $ldapPath = "LDAP://RootDSE"
-                $entry = New-Object System.DirectoryServices.DirectoryEntry($ldapPath, $cred.UserName, $cred.GetNetworkCredential().Password)
-                $null = $entry.NativeObject  # Force the bind; exception if validation fails
-                [System.Windows.MessageBox]::Show("Domain credentials validated.")
-                $Global:ADCreds = $cred
-                $window.Close()
-            }
-            catch {
-                [System.Windows.MessageBox]::Show("Domain credential validation failed.")
-            }
-        })
+        # OK Button event: Validate credentials via LDAP bind.
+       # OK Button event: Validate credentials via LDAP bind.
+$okButton.Add_Click({
+    if (-not $usernameBox.Text -or -not $passwordBox.Password) {
+        Show-WPFMessage -Message "Username and Password required" -Title "Info" -Color Blue
+        return
+    }
+    try {
+        $secPwd = ConvertTo-SecureString $passwordBox.Password -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential ($usernameBox.Text, $secPwd)
+    }
+    catch {
+        Show-WPFMessage -Message "Error creating credentials." -Title "Error" -Color Red
+        return
+    }
+    
+    try {
+      # Validate credentials via LDAP bind by retrieving a known property.
+       
+         # Build the LDAP path for the specified domain controller.
+        $ldapPath = "LDAP://$DefaultDomainController"
         
-        # Cancel Button event: Close the window without storing credentials
+        # Create a DirectoryEntry using the provided credentials.
+        $entry = New-Object System.DirectoryServices.DirectoryEntry($ldapPath, $cred.UserName, $cred.GetNetworkCredential().Password)
+        
+        # Force an LDAP bind by retrieving a known property.
+        $dummy = $entry.Properties["defaultNamingContext"].Value
+
+        Show-WPFMessage -Message "Domain credentials validated." -Title "Success" -Color Green
+        $Global:ADCreds = $cred
+        $window.Close()
+    }
+    catch {
+        Show-WPFMessage -Message "Domain credential validation failed." -Title "Error" -Color Red
+    }
+})
+
+        
+        # Cancel Button event: Close the window without saving credentials.
         $cancelButton.Add_Click({
             $Global:ADCreds = $null
             $window.Close()
@@ -197,18 +374,19 @@ Function Prompt-Restart {
     [xml]$RestartXAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Restart Confirmation" Height="200" Width="400" 
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#F8F8F8">
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="WidthAndHeight">
+  <Grid>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Header Section -->
-        <Border Grid.Row='0' Background='#1E90FF' Padding='5'>
+        <Border Grid.Row='0' Background='#0078D7' Padding='5'>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <TextBlock Text="Restart Confirmation" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
             </StackPanel>
@@ -226,7 +404,8 @@ Function Prompt-Restart {
             <Button x:Name="YesButton" Content="Yes, Restart" Width="120" Height="30" Background="#32CD32" Foreground="White" FontWeight="Bold" Margin="5"/>
             <Button x:Name="NoButton" Content="No, Postpone" Width="120" Height="30" Background="#FF6347" Foreground="White" FontWeight="Bold" Margin="5"/>
         </StackPanel>
-    </Grid>
+      </Grid>
+  </Grid>
 </Window>
 "@
 
@@ -261,14 +440,210 @@ Function Prompt-Restart {
 
         # Check User's Choice and Restart If Necessary
         if ($Global:RestartConfirmed) {
-            Show-Output "Restarting the computer..." "Orange"
+            Show-WPFMessage -Message "Restarting the computer..." -Title "Warning" -Color Orange
             Restart-Computer -Force
         } else {
-            Show-Output "Restart postponed by the user." "Yellow"
+            Show-WPFMessage -Message "Restart postponed by the user." -Title "Info" -Color Blue
         }
 
     } catch {
-        Show-Error "An error occurred in the Restart Confirmation Window: $($_.Exception.Message)"
+        Show-WPFMessage -Message "An error occurred in the Restart Confirmation Window: $($_.Exception.Message)" -Title "Error" -Color Red
+    }
+}
+
+# Function to Populate PC Info with IP Address and Entra ID Status
+Function Update-PCInfo {
+    try {
+        # Ensure UI elements exist
+        if (-not $Global:SCCMStatusBlock) { Show-WPFMessage -Message "ERROR: SCCMStatusBlock is NULL in Update-PCInfo!" -Title "Error" -Color Red }
+        if (-not $Global:CoManagementBlock) { Show-WPFMessage -Message "ERROR: CoManagementBlock is NULL in Update-PCInfo!" -Title "Error" -Color Red }
+
+        # Get computer information
+        $ComputerName = $env:COMPUTERNAME
+        
+        # Get primary IPv4 address (excluding loopback)
+        $IPAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" -and $_.ValidLifetime -ne "Infinite" } | Select-Object -ExpandProperty IPAddress -First 1) -join ", "
+        $ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
+        $DomainStatus = if ($ComputerSystem.PartOfDomain) { "Domain Joined" } else { "Workgroup" }
+
+        # Get Entra ID Status using dsregcmd
+        $dsregcmdOutput = dsregcmd /status | Out-String
+        if ($dsregcmdOutput -match "AzureAdJoined\s*:\s*YES" -and $dsregcmdOutput -match "DomainJoined\s*:\s*YES") {
+            $EntraIDStatus = "Hybrid AD Joined"
+        } elseif ($dsregcmdOutput -match "AzureAdJoined\s*:\s*YES") {
+            $EntraIDStatus = "Azure AD Joined"
+        } else {
+            $EntraIDStatus = "Not Joined"
+        }
+
+        # Detect SCCM Agent
+        $SCCMInstalled = Get-WmiObject -Namespace "root\ccm" -Class "SMS_Client" -ErrorAction SilentlyContinue
+        if ($SCCMInstalled) {
+            $SCCMStatus = "Installed"
+            $SCCMColor = "#28A745" # Green
+        } else {
+            $SCCMStatus = "Not Installed"
+            $SCCMColor = "#DC3545" # Red
+        }
+
+        # Detect Co-Management Status using Registry
+        # Initialize default values
+        $CoManagementStatus = "Not Detected"
+        $CoManagementColor = "#DC3545"  # Default: Red (Disabled)
+
+        # **Check SCCM Co-Management (CoManagementFlags)**
+        $CoManagementRegPath = "HKLM:\SOFTWARE\Microsoft\CCM"
+        if (Test-Path $CoManagementRegPath) {
+            try {
+                $CoManagementValue = Get-ItemProperty -Path $CoManagementRegPath -Name "CoManagementFlags" -ErrorAction SilentlyContinue
+                if ($CoManagementValue) {
+                    switch ($CoManagementValue.CoManagementFlags) {
+                        0   { $CoManagementStatus = "SCCM Only (No Co-Management)"; $CoManagementColor = "#DC3545" }  # Red
+                        1   { $CoManagementStatus = "SCCM Managed (Minimal)"; $CoManagementColor = "#FFA500" }  # Orange
+                        2   { $CoManagementStatus = "Pilot Intune (Partial)"; $CoManagementColor = "#0078D7" }  # Blue
+                        3   { $CoManagementStatus = "Full Co-Management Enabled"; $CoManagementColor = "#28A745" }  # Green
+                        255 { $CoManagementStatus = "Fully Intune Managed (All Workloads in Intune)"; $CoManagementColor = "#28A745" }  # Green
+                        default { $CoManagementStatus = "Unknown State"; $CoManagementColor = "#DC3545" }  # Red
+                    }
+                }
+            } catch {
+                Write-Host "DEBUG: SCCM Co-Management Registry Read Error -> $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+
+        # **Check Intune Auto Enrollment via Policy**
+        $AutoEnrollRegPath = "HKLM:\Software\Policies\Microsoft\Windows\CurrentVersion\MDM"
+        if (Test-Path $AutoEnrollRegPath) {
+            try {
+                $MDMValue = Get-ItemProperty -Path $AutoEnrollRegPath -Name "AutoEnrollMDM" -ErrorAction SilentlyContinue
+                if ($MDMValue -and $MDMValue.AutoEnrollMDM -eq 1) {
+                    $CoManagementStatus = "Intune Auto Enrollment Enabled"
+                    $CoManagementColor = "#28A745"  # Green
+                }
+            } catch {
+                Write-Host "DEBUG: Intune Auto Enrollment Registry Read Error -> $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+
+        # **Return Co-Management Status**
+        Write-Host "Co-Management Status: $CoManagementStatus" -ForegroundColor Cyan
+
+
+
+        # Update UI Elements
+        $Global:PcNameBlock.Dispatcher.Invoke([action]{ $Global:PcNameBlock.Text = $ComputerName }, "Render")
+        $Global:PcIPAddressBlock.Dispatcher.Invoke([action]{ $Global:PcIPAddressBlock.Text = $IPAddress }, "Render")
+        $Global:PcDomainStatusBlock.Dispatcher.Invoke([action]{ 
+            $Global:PcDomainStatusBlock.Text = $DomainStatus 
+            $Global:PcDomainStatusBlock.Background = if ($DomainStatus -eq "Domain Joined") { "#28A745" } else { "#DC3545" }
+            $Global:PcDomainStatusBlock.Foreground = "White"
+        }, "Render")
+        $Global:PcEntraIDStatusBlock.Dispatcher.Invoke([action]{ 
+            $Global:PcEntraIDStatusBlock.Text = $EntraIDStatus
+            $Global:PcEntraIDStatusBlock.Background = if ($EntraIDStatus -eq "Azure AD Joined" -or $EntraIDStatus -eq "Hybrid AD Joined") { "#28A745" } else { "#DC3545" }
+            $Global:PcEntraIDStatusBlock.Foreground = "White"
+        }, "Render")
+        $Global:SCCMStatusBlock.Dispatcher.Invoke([action]{ 
+            $Global:SCCMStatusBlock.Text = $SCCMStatus
+            $Global:SCCMStatusBlock.Background = $SCCMColor
+            $Global:SCCMStatusBlock.Foreground = "White"
+        }, "Render")
+        $Global:CoManagementBlock.Dispatcher.Invoke([action]{ 
+            $Global:CoManagementBlock.Text = $CoManagementStatus
+            $Global:CoManagementBlock.Background = $CoManagementColor
+            $Global:CoManagementBlock.Foreground = "White"
+        }, "Render")
+
+    } catch {
+        Show-WPFMessage -Message "Failed to update PC information: $($_.Exception.Message)" -Title "Error" -Color Red
+    }
+}
+
+# Function to Convert Hex Color to WPF Brush
+Function ConvertFrom-HexToColor {
+    param([string]$HexColor)
+    return [System.Windows.Media.ColorConverter]::ConvertFromString($HexColor)
+}
+
+# Function to join a computer to a domain with a selected OU
+Function Join-ComputerWithOU {
+    param (
+        [string]$DomainName,
+        [string]$OUPath
+    )
+    try {
+        # Check if the computer is already in the domain
+        $CurrentDomain = (Get-WmiObject -Class Win32_ComputerSystem).Domain
+        if ($CurrentDomain -eq $DomainName) {
+           Show-WPFMessage -Message "The computer '$env:COMPUTERNAME' is already a member of the domain '$DomainName'. No action is needed." -Title "Info" -Color Blue
+            return
+        }
+
+        # If not in the domain, proceed to join
+        Add-Computer -DomainName $DomainName -OUPath $OUPath -Credential $Global:ADCreds -Force
+        Show-WPFMessage -Message "Computer successfully joined to domain
+        - Domain :  $DomainName
+        - OU        :  $OUPath." -Title "Success" -Color Green
+        Update-PCInfo
+        Prompt-Restart
+        
+    } catch {
+
+    # Check for specific error: "The server is not operational"
+                if ($_.Exception.Message -match "The server is not operational") {
+                 Show-WPFMessage -Message "Failed to connect to Active Directory. Please check and update the following:
+                - Domain Controller
+                - Domain Name
+                - OU Search Base
+                - AD Credential" -Title "Error" -Color Red
+                    
+                } else {
+                    # Handle other unexpected errors
+                      Show-WPFMessage -Message "Failed to join the computer to domain: $($_.Exception.Message)" -Title "Error" -Color Red     
+    }
+    }
+}
+
+# Function to disjoin a computer from a domain
+Function Disjoin-ComputerFromDomain {
+    param ([string]$ComputerName)
+    $ComputerDomainStatus = (Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
+
+    if ($ComputerDomainStatus) {
+        try {
+         # Show confirmation dialog
+             $Confirmation = Show-WPFConfirmation -Message "Are you sure you want to disjoin the computer '$ComputerName' from the domain?" -Title "Disjoin Confirmation" -Color Blue
+            
+            if (-not $Confirmation) {
+            Show-WPFMessage -Message "Deletion operation canceled by the user." -Title "Info" -Color Blue
+            return
+        }
+
+            # Proceed with disjoin
+            Remove-Computer -WorkgroupName "WORKGROUP" -Credential $Global:ADCreds -Force
+            Show-WPFMessage -Message "Computer '$ComputerName' successfully disjoined from the domain." -Title "Success" -Color Green
+            
+            Update-PCInfo
+            Prompt-Restart
+        } catch {
+
+        # Check for specific error: "The server is not operational"
+                if ($_.Exception.Message -match "The server is not operational") {
+                    
+                     Show-WPFMessage -Message "Failed to connect to Active Directory. Please check and update the following:
+                    - Domain Controller
+                    - Domain Name
+                    - OU Search Base" -Title "Error" -Color Red
+                    
+                } else {
+                    # Handle other unexpected errors
+                     Show-WPFMessage -Message  "Failed to disjoin computer '$ComputerName' from the domain: $($_.Exception.Message)" -Title "Error" -Color Red
+                    
+        }
+        }
+    } else {
+       
+        Show-WPFMessage -Message "The computer '$ComputerName' is not part of a domain. Skipping disjoin operation." -Title "Info" -Color Blue
     }
 }
 
@@ -282,27 +657,19 @@ Function Delete-ComputerFromAD {
     try {
         # If AD credentials haven't been set, prompt for them.
         if (-not $Global:ADCreds) {
-            Show-Output "Credentials not found. Prompting for credentials..."
+            Show-WPFMessage -Message "Credentials not found. Prompting for credentials..." -Title "Info" -Color Blue
             $Global:ADCreds = Prompt-Credentials
             if (-not $Global:ADCreds) {
-                Show-Error "No credentials provided. Exiting function."
+                Show-WPFMessage -Message "No credentials provided. Exiting function." -Title "Error" -Color Red
                 return
             }
         }
 
-        # Show confirmation dialog
-        $Confirmation = [System.Windows.MessageBox]::Show(
-            "Are you sure you want to delete the computer '$ComputerName' from Active Directory?",
-            "Delete Confirmation",
-            [System.Windows.MessageBoxButton]::YesNo,
-            [System.Windows.MessageBoxImage]::Question
-        )
-        
-        # If user cancels the operation, exit the function
-        if ($Confirmation -ne 'Yes') {
-            Show-Output "----------------------------------------------------------------"
-            Show-Output "Deletion operation canceled by the user."
-            Show-Output "----------------------------------------------------------------"
+        # Show confirmation dialog using the custom WPF confirmation function.
+        $Confirmation = Show-WPFConfirmation -Message "Are you sure you want to delete the computer '$ComputerName' from Active Directory?" -Title "Delete Confirmation" -Color Blue
+
+        if (-not $Confirmation) {
+            Show-WPFMessage -Message "Deletion operation canceled by the user." -Title "Info" -Color Blue
             return
         }
 
@@ -321,172 +688,82 @@ Function Delete-ComputerFromAD {
             # The ACCOUNTDISABLE flag has a value of 2.
             $ACCOUNTDISABLE = 2
 
-            # If the account is NOT disabled, we assume it is active (joined to the domain).
+            # If the account is NOT disabled, assume it is active.
             if (-not ($uac -band $ACCOUNTDISABLE)) {
-                Show-Output "----------------------------------------------------------------"
-                Show-Error "Deletion aborted: The computer '$ComputerName' appears to be active (joined to a domain)."
-                Show-Output "----------------------------------------------------------------"
+                Show-WPFMessage -Message "Deletion aborted: The computer '$ComputerName' appears to be active (joined to a domain)." -Title "Error" -Color Red
                 return
             }
 
-            # Proceed with deletion since the account appears disabled.
+            # Proceed with deletion.
             $ComputerEntry.DeleteTree()
             $ComputerEntry.CommitChanges()
-
-            Show-Output "----------------------------------------------------------------"
-            Show-Success "Successfully deleted computer '$ComputerName' from Active Directory."
-            Show-Output "----------------------------------------------------------------"
-        } else {
-            Show-Output "----------------------------------------------------------------"
-            Show-Output "Computer '$ComputerName' was not found in Active Directory."
-            Show-Output "----------------------------------------------------------------"
+            Show-WPFMessage -Message "Successfully deleted computer '$ComputerName' from Active Directory." -Title "Success" -Color Green
+        } 
+        else {
+            Show-WPFMessage -Message "Computer '$ComputerName' was not found in Active Directory." -Title "Info" -Color blue
         }
     }
     catch {
         if ($_.Exception.Message -match "The server is not operational") {
-            Show-Output "----------------------------------------------------------------"
-            Show-Error "Failed to connect to Active Directory. Please check and update the following:
-    - Domain Controller
-    - Domain Name
-    - OU Search Base"
-            Show-Output "----------------------------------------------------------------"
+            Show-WPFMessage -Message "Failed to connect to Active Directory. Please check and update the following:
+            - Domain Controller
+            - Domain Name
+            - OU Search Base" -Title "Error" -Color Red
         }
         else {
-            Show-Output "----------------------------------------------------------------"
-            Show-Error "Failed to delete the computer from Active Directory: $($_.Exception.Message)"
-            Show-Output "----------------------------------------------------------------"
+            Show-WPFMessage -Message "Failed to delete the computer from Active Directory: $($_.Exception.Message)" -Title "Error" -Color Red
         }
     }
 }
 
-# Function to disjoin a computer from a domain
-Function Disjoin-ComputerFromDomain {
-    param ([string]$ComputerName)
-    $ComputerDomainStatus = (Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
-
-    if ($ComputerDomainStatus) {
-        try {
-         # Show confirmation dialog
-            $Confirmation = [System.Windows.MessageBox]::Show(
-                "Are you sure you want to disjoin the computer '$ComputerName' from the domain?",
-                "Disjoin Confirmation",
-                [System.Windows.MessageBoxButton]::YesNo,
-                [System.Windows.MessageBoxImage]::Question
-            )
-            
-            # If user cancels the operation, exit the function
-            if ($Confirmation -ne 'Yes') {
-                Show-Output "----------------------------------------------------------------"
-                Show-Output "Disjoin operation canceled by the user."
-                Show-Output "----------------------------------------------------------------"
-                return
-            }
-
-            # Proceed with disjoin
-            Remove-Computer -WorkgroupName "WORKGROUP" -Credential $Global:ADCreds -Force
-            Show-Output "----------------------------------------------------------------"
-            Show-Success "Computer '$ComputerName' successfully disjoined from the domain."
-            Show-Output "----------------------------------------------------------------"
-            
-            # Prompt the user to restart the computer
-            Prompt-Restart
-        } catch {
-
-        # Check for specific error: "The server is not operational"
-                if ($_.Exception.Message -match "The server is not operational") {
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to connect to Active Directory. Please check and update the following:
-        - Domain Controller
-        - Domain Name
-        - OU Search Base"
-                    Show-Output "----------------------------------------------------------------"
-                    
-                } else {
-                    # Handle other unexpected errors
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to disjoin computer '$ComputerName' from the domain: $($_.Exception.Message)"
-                    Show-Output "----------------------------------------------------------------"
-        }
-        }
-    } else {
-        Show-Output "----------------------------------------------------------------"
-        Show-Output "The computer '$ComputerName' is not part of a domain. Skipping disjoin operation."
-        Show-Output "----------------------------------------------------------------"
-    }
-}
-
-# Function to join a computer to a domain with a selected OU
-Function Join-ComputerWithOU {
-    param (
-        [string]$DomainName,
-        [string]$OUPath
-    )
+Function Join-EntraID {
     try {
-        # Check if the computer is already in the domain
-        $CurrentDomain = (Get-WmiObject -Class Win32_ComputerSystem).Domain
-        if ($CurrentDomain -eq $DomainName) {
-            Show-Output "----------------------------------------------------------------"
-            Show-Output "The computer '$env:COMPUTERNAME' is already a member of the domain '$DomainName'. No action is needed."
-            Show-Output "----------------------------------------------------------------"
+
+     # Show confirmation dialog
+             $Confirmation = Show-WPFConfirmation -Message "Are you sure you want to join the computer '$ComputerName' to EntaID?" -Title "Disjoin Confirmation" -Color Blue
+            
+            if (-not $Confirmation) {
+            Show-WPFMessage -Message "Joining operation canceled by the user." -Title "Info" -Color Blue
             return
         }
-
-        # If not in the domain, proceed to join
-        Add-Computer -DomainName $DomainName -OUPath $OUPath -Credential $Global:ADCreds -Force
-        Show-Output "----------------------------------------------------------------"
-        Show-Success "Computer successfully joined to domain '$DomainName' in OU '$OUPath'."
-        Show-Output "----------------------------------------------------------------"
-
-        # Prompt the user to restart the computer
-        Prompt-Restart
         
+        Start-Process -FilePath "C:\Windows\System32\dsregcmd.exe" -ArgumentList "/join" -NoNewWindow -Wait
+        Show-WPFMessage -Message "Device successfully joined to Entra ID." -Title "Success" -Color Green
     } catch {
-
-    # Check for specific error: "The server is not operational"
-                if ($_.Exception.Message -match "The server is not operational") {
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to connect to Active Directory. Please check and update the following:
-        - Domain Controller
-        - Domain Name
-        - OU Search Base
-        - AD Credential"
-                    Show-Output "----------------------------------------------------------------"
-                } else {
-                    # Handle other unexpected errors
-                    Show-Output "----------------------------------------------------------------"
-                     Show-Error "Failed to join the computer to domain: $($_.Exception.Message)"
-                    Show-Output "----------------------------------------------------------------"
-    }
+        Show-WPFMessage -Message "Failed to join Entra ID: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 }
 
-#Function to Populate PC Info
-Function Update-PCInfo {
-    param (
-        [ref]$PcNameBlock,
-        [ref]$PcDomainStatusBlock
-    )
-
+Function Disjoin-EntraID {
     try {
-        # Get computer information
-        $ComputerName = $env:COMPUTERNAME
-        $PartOfDomain = (Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
-        $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
-
-        # Update the PC Name Block
-        $PcNameBlock.Value.Text = "Computer Name:  $ComputerName"
-
-        # Update the Domain Status Block
-        if ($PartOfDomain) {
-            $PcDomainStatusBlock.Value.Text = "Domain Status:  Joined to '$DomainName'"
-        } else {
-            $PcDomainStatusBlock.Value.Text = "Domain Status:  Not joined to a domain (Workgroup)"
+     # Show confirmation dialog
+             $Confirmation = Show-WPFConfirmation -Message "Are you sure you want to remove the computer '$ComputerName' from EntraID?" -Title "Disjoin Confirmation" -Color Blue
+            
+            if (-not $Confirmation) {
+            Show-WPFMessage -Message "Remove operation canceled by the user." -Title "Info" -Color Blue
+            return
         }
+        
+        Start-Process -FilePath "C:\Windows\System32\dsregcmd.exe" -ArgumentList "/leave" -NoNewWindow -Wait
+        Show-WPFMessage -Message "Device removed from Entra ID." -Title "Success" -Color Red
     } catch {
-        # Handle errors
-        $PcNameBlock.Value.Text = "Computer Name: Unable to retrieve"
-        $PcDomainStatusBlock.Value.Text = "Domain Status: Unable to retrieve"
-        Display-Message "Failed to update PC information: $($_.Exception.Message)" -Type "Error"
+        Show-WPFMessage -Message "Failed to remove from Entra ID: $($_.Exception.Message)" -Title "Error" -Color Red
+    }
+}
+
+Function Join-IntuneAsPersonalDevice {
+    try {
+    # Show confirmation dialog
+             $Confirmation = Show-WPFConfirmation -Message "Are you sure you want to add the computer '$ComputerName' to Intune?" -Title "Disjoin Confirmation" -Color Blue
+            
+            if (-not $Confirmation) {
+            Show-WPFMessage -Message "Operation canceled by the user." -Title "Info" -Color Blue
+            return
+        }
+        Start-Process "ms-device-enrollment:?mode=mdm"
+        Show-WPFMessage -Message "Opening Intune enrollment page. Follow the steps to complete enrollment." -Title "Intune Enrollment" -Color Blue
+    } catch {
+        Show-WPFMessage -Message "Failed to launch Intune enrollment: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 }
 
@@ -534,7 +811,6 @@ Function Show-OUWindow {
 
         # Populate the OU DataGrid
         try {
-            Show-Output "Fetching Organizational Units from Active Directory..."
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
             $LDAPPath = "LDAP://$DomainController/$SearchBase"
@@ -571,17 +847,14 @@ Function Show-OUWindow {
 
         # Check for specific error: "The server is not operational"
                 if ($_.Exception.Message -match "The server is not operational") {
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to connect to Active Directory. Please check and update the following:
-        - Domain Controller
-        - Domain Name
-        - OU Search Base"
-                    Show-Output "----------------------------------------------------------------"
+                    Show-WPFMessage -Message "Failed to connect to Active Directory. Please check and update the following:
+                    - Domain Controller
+                    - Domain Name
+                    - OU Search Base" -Title "Error" -Color Red
+                    
                 } else {
                     # Handle other unexpected errors
-                    Show-Output "----------------------------------------------------------------"
-                    Show-Error "Failed to retrieve OUs: $($_.Exception.Message)"
-                    Show-Output "----------------------------------------------------------------"
+                    Show-WPFMessage -Message  "Failed to retrieve OUs: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 
         }
@@ -592,12 +865,10 @@ Function Show-OUWindow {
             $SelectedOU = $OUDataGrid.SelectedItem
             if ($SelectedOU -ne $null) {
                 $SelectedOUBox.Text = $SelectedOU.DistinguishedName
-                Show-Output "Selected OU: $($SelectedOU.DistinguishedName)"
+                Show-WPFMessage -Message "Selected OU: $($SelectedOU.DistinguishedName)" -Title "Info" -Color Blue
                 $OUWindow.Close()
             } else {
-                Show-Output "----------------------------------------------------------------"
-                Show-Error "No OU selected. Please select an OU before proceeding."
-                Show-Output "----------------------------------------------------------------"
+                Show-WPFMessage -Message  "No OU selected. Please select an OU before proceeding." -Title "Error" -Color Red 
             }
         })
 
@@ -609,9 +880,7 @@ Function Show-OUWindow {
         [void]$OUWindow.ShowDialog()
 
     } catch {
-        Show-Output "----------------------------------------------------------------"
-        Show-Error "Failed to load the OU selection window: $($_.Exception.Message)"
-        Show-Output "----------------------------------------------------------------"
+        Show-WPFMessage -Message "Failed to load the OU selection window: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 }
 
@@ -625,12 +894,10 @@ Function Show-MainGUI {
 <Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
         xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
         Title='Join / Unjoin Computer Tool' 
-        Width='700' 
-        Height='700'
         Background='#F8F8F8' 
         WindowStartupLocation='CenterScreen' 
-        ResizeMode='NoResize'>
-
+        ResizeMode='NoResize'
+        SizeToContent="WidthAndHeight">
     <Grid>
         <!-- Layout Definitions -->
         <Grid.RowDefinitions>
@@ -640,7 +907,7 @@ Function Show-MainGUI {
         </Grid.RowDefinitions>
 
         <!-- Header Section -->
-        <Border Grid.Row='0' Background='#1E90FF' Padding='15'>
+        <Border Grid.Row='0' Background='#0078D7' Padding='15'>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 
                 <TextBlock Text="Join / Unjoin Computer Tool"
@@ -694,37 +961,77 @@ Function Show-MainGUI {
                 </StackPanel>
             </Border>
 
-            <!-- Second Section: PC Info -->
-            <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,5,0,5">
+     <!-- Second Section: PC Info -->
+            <Border BorderBrush="#D3D3D3" BorderThickness="0.5" Padding="10" Margin="0,5,0,5">
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="PC Info:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <TextBlock x:Name="PcNameBlock" Text="Computer Name:  Loading..." FontSize="14" Margin="0,5,0,0"/>
-                    <TextBlock x:Name="PcDomainStatusBlock" Text="Domain Status:  Loading..." FontSize="14" Margin="0,5,0,0"/>
+                    <TextBlock Text="PC Information:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Computer Name:" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PcNameBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"  />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="IP Address:" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="PcIPAddressBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Domain Status:" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="PcDomainStatusBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+                    
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Entra ID Status:" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="PcEntraIDStatusBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+
+
+                    <!-- SCCM Agent Status -->
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="SCCM Agent:" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="SCCMStatusBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+
+                    <!-- Co-Management Status -->
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Co-Management:" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="CoManagementBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+
+
+                </Grid>
+                 
                 </StackPanel>
             </Border>
 
-            <!-- Third Section: Disjoin and Delete -->
-         
+
+          <!-- Third Section -->
+         <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,5,0,5">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button x:Name="JoinButton" Content="➕ Join to Domain + OU" Width="200" Height="40" Background="#32CD32" Foreground="White"
+                    <Button x:Name="JoinButton" Content="➕ Join to Domain + OU" Width="200" Height="40" Background="#32CD32" Foreground="White"
                                 FontSize="14" FontWeight="Bold" Margin="10"/>
-                    <Button x:Name="DisjoinButton" Content="🔌 Disjoin from Domain" Width="200" Height="40" Background="#FFA500" Foreground="White"
-                            FontSize="14" FontWeight="Bold" Margin="10"/>
-                    <Button x:Name="DeleteButton" Content="🗑️ Delete from AD" Width="200" Height="40" Background="#FF6347" Foreground="White"
-                            FontSize="14" FontWeight="Bold" Margin="10"/>
+                     <Button x:Name="DisjoinButton" Content="🔌 Disjoin from Domain" Width="200" Height="40" Background="#FFA500" Foreground="White"
+                                FontSize="14" FontWeight="Bold" Margin="10"/>
+                     <Button x:Name="DeleteButton" Content="🗑️ Delete from AD" Width="200" Height="40" Background="#FF6347" Foreground="White"
+                                FontSize="14" FontWeight="Bold" Margin="10"/>
                 </StackPanel>
+         </Border>
 
-
-            <!-- Fourth Section: Console -->
-
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Output Console:" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBox x:Name="Console" IsReadOnly="True" Background="Black" Foreground="White" FontFamily="Consolas" FontSize="12"
-                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="170" BorderBrush="#1E90FF" BorderThickness="1"/>
-                </StackPanel>
-
-
+        <!-- Forth Section -->
+         <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,5,0,5">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="JoinEntraIDButton" Content="🔹 Join to Entra ID" Width="200" Height="40" Background="#0078D7" Foreground="White"
+                        FontSize="14" FontWeight="Bold" Margin="10"/>
+                <Button x:Name="DisjoinEntraIDButton" Content="🔻 Disjoin from Entra ID" Width="200" Height="40" Background="#DC3545" Foreground="White"
+                        FontSize="14" FontWeight="Bold" Margin="10"/>
+                <Button x:Name="JoinIntunePersonalButton" Content="📲 Join Intune (Personal)" Width="200" Height="40" Background="#0078D7" Foreground="White"
+                        FontSize="14" FontWeight="Bold" Margin="10"/>
+            </StackPanel>
+         </Border>
         </StackPanel>
+
 
         <!-- Footer Section -->
         <Border Grid.Row='2' Background='#D3D3D3' Padding='5'>
@@ -747,7 +1054,7 @@ Function Show-MainGUI {
         $Reader = New-Object System.Xml.XmlNodeReader $XAML
         $Window = [System.Windows.Markup.XamlReader]::Load($Reader)
 
-        # Assign GUI controls
+      # Assign GUI controls
         $Console = $Window.FindName('Console')
         $DomainControllerBox = $Window.FindName('DomainControllerBox')
         $DomainNameBox = $Window.FindName('DomainNameBox')
@@ -756,9 +1063,29 @@ Function Show-MainGUI {
         $DeleteButton = $Window.FindName('DeleteButton')
         $DisjoinButton = $Window.FindName('DisjoinButton')
         $JoinButton = $Window.FindName('JoinButton')
-        $PcNameBlock = $Window.FindName('PcNameBlock')
-        $PcDomainStatusBlock = $Window.FindName('PcDomainStatusBlock')
 
+        # Assign UI elements to global variables
+        $Global:PcNameBlock = $Window.FindName('PcNameBlock')
+        $Global:PcDomainStatusBlock = $Window.FindName('PcDomainStatusBlock')
+        $Global:PcIPAddressBlock = $Window.FindName('PcIPAddressBlock')
+        $Global:PcEntraIDStatusBlock = $Window.FindName('PcEntraIDStatusBlock')
+        $Global:SCCMStatusBlock = $Window.FindName('SCCMStatusBlock')
+        $Global:CoManagementBlock = $Window.FindName('CoManagementBlock')
+        $JoinEntraIDButton = $Window.FindName('JoinEntraIDButton')
+        $DisjoinEntraIDButton = $Window.FindName('DisjoinEntraIDButton')
+        $JoinIntunePersonalButton = $Window.FindName('JoinIntunePersonalButton')
+
+
+
+        # Validate controls
+        if (-not $Global:PcIPAddressBlock) {Show-WPFMessage -Message "ERROR: PcIPAddressBlock is NULL! Check XAML element name." -Title "Error" -Color Red}
+        if (-not $Global:PcEntraIDStatusBlock) {Show-WPFMessage -Message "ERROR: PcEntraIDStatusBlock is NULL! Check XAML element name." -Title "Error" -Color Red}
+        if (-not $Global:SCCMStatusBlock) { Write-Host "ERROR: SCCMStatusBlock is NULL!" -ForegroundColor Red }
+        if (-not $Global:CoManagementBlock) { Write-Host "ERROR: CoManagementBlock is NULL!" -ForegroundColor Red }
+        # Run PC Info update
+        Update-PCInfo
+
+   
         # Flush Log Buffer to Console
         foreach ($LogEntry in $LogBuffer) {
             $Console.AppendText("$LogEntry`r`n")
@@ -770,7 +1097,6 @@ Function Show-MainGUI {
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
-            Show-Output "Deleting computer '$ComputerName' from AD..."
             Delete-ComputerFromAD -ComputerName $ComputerName -DomainController $DomainController -SearchBase $SearchBase
         })
 
@@ -779,35 +1105,48 @@ Function Show-MainGUI {
             $ComputerName = $env:COMPUTERNAME
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase = $SearchBaseBox.Text.Trim()
-            Show-Output "Disjoining computer '$ComputerName' from domain..."
             Disjoin-ComputerFromDomain -ComputerName $ComputerName
         })
 
         $JoinButton.Add_Click({
             Prompt-Credentials
-            Show-Output "Opening the Join + OU window..."
             Show-OUWindow
            $SelectedOU = $SelectedOUBox.Text.Trim()
             if ($SelectedOU -ne "") {
                 $DomainName = $DomainNameBox.Text.Trim()
-                Show-Output "Joining computer to domain '$DomainName' in OU '$SelectedOU'..."
                 Join-ComputerWithOU -DomainName $DomainName -OUPath $SelectedOU
             } else {
-                Show-Output "----------------------------------------------------------------"
-                Show-Error "No OU selected. Please select an OU before joining."
-                Show-Output "----------------------------------------------------------------"
+                Show-WPFMessage -Message "No OU selected. Please select an OU before joining." -Title "Error" -Color Red
             }
         })
 
-        # Update PC Info
-        Update-PCInfo -PcNameBlock ([ref]$PcNameBlock) -PcDomainStatusBlock ([ref]$PcDomainStatusBlock)
+        # Assign Click Events
+        $JoinEntraIDButton.Add_Click({ 
+        Join-EntraID 
+        })
+        $DisjoinEntraIDButton.Add_Click({ 
+        Disjoin-EntraID 
+        })
+        $JoinIntunePersonalButton.Add_Click({
+        Join-IntuneAsPersonalDevice 
+        })
+
+        # Use DispatcherTimer to delay execution of Update-PCInfo
+        $Timer = New-Object System.Windows.Threading.DispatcherTimer
+        $Timer.Interval = [TimeSpan]::FromMilliseconds(900)  # Wait 0.5 seconds before updating PC info
+        $Timer.Add_Tick({
+            $Timer.Stop()
+            Update-PCInfo
+        })
+        $Timer.Start()
         
+
         # Show the GUI
         [void]$Window.ShowDialog()
         
 
     } catch {
-        Show-Error "Failed to initialize GUI: $($_.Exception.Message)"
+        Show-WPFMessage -Message "Failed to initialize GUI: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 }
 
@@ -816,7 +1155,8 @@ Function Show-MainGUI {
 ###############################################################################
 
 try {
+    Test-Admin
     Show-MainGUI
 } catch {
-    Show-Error "An unexpected error occurred: $($_.Exception.Message)"
+    Show-WPFMessage -Message "An unexpected error occurred: $($_.Exception.Message)" -Title "Error" -Color Red
 }
