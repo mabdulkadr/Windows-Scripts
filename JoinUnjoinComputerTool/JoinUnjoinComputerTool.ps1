@@ -274,6 +274,46 @@ Function Show-WPFConfirmation {
     }
 }
 
+Function Show-SplashScreen {
+    Add-Type -AssemblyName PresentationFramework
+
+    [xml]$SplashXAML = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        Title="Loading..."
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        Width="400"
+        Height="200"
+        Background="#0078D7"
+        Topmost="True">
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="Loading, please wait..."
+                       FontSize="16" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"/>
+            <ProgressBar IsIndeterminate="True" Width="300" Height="20" Margin="0,20,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
+"@
+
+    # Load the Splash Screen
+    $Reader = New-Object System.Xml.XmlNodeReader ([xml]$SplashXAML)
+    $SplashWindow = [System.Windows.Markup.XamlReader]::Load($Reader)
+
+    # Show Splash Screen
+    $SplashWindow.Show()
+
+    # Wait for 2 seconds
+    Start-Sleep -Seconds 5
+
+    # Close Splash Screen
+    $SplashWindow.Close()
+}
+
 # Check if the script is running with administrator privileges
 Function Test-Admin {
     if (-not (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -1275,8 +1315,10 @@ Function Show-MainGUI {
 ###############################################################################
 
 try {
-    Test-Admin
-    Show-MainGUI
+    Show-SplashScreen   # Show splash screen for 2 seconds
+    Test-Admin          # Ensure script runs as admin
+    Show-MainGUI        # Load main GUI
 } catch {
     Show-WPFMessage -Message "An unexpected error occurred: $($_.Exception.Message)" -Title "Error" -Color Red
 }
+
