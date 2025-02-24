@@ -130,6 +130,3 @@ See the [LICENSE](LICENSE) file for details.
 ### 📢 **Disclaimer**
 This script is provided **as-is**. Use it with caution, and **test in a non-production environment before deployment**. The author is **not responsible** for unintended modifications or data loss.
 
----
-
-🚀 **Enjoy your hassle-free remote uninstallation experience!**
