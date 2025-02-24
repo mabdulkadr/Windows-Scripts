@@ -133,4 +133,9 @@ The script gathers system details using:
 
 This project is licensed under the **MIT License**. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.
 
+---
+
+## Disclaimer
+This script is provided **as-is**. Use it with caution, and **test in a non-production environment before deployment**. The author is **not responsible** for unintended modifications or data loss.
+
 
