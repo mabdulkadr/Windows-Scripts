@@ -1,25 +1,70 @@
 <#
 .SYNOPSIS
-    A PowerShell GUI tool for managing computer objects in Active Directory using LDAP queries.
+    A PowerShell GUI tool for managing computer objects in Active Directory, Entra ID, and Intune.
 
 .DESCRIPTION
-    This script provides a GUI-based tool for managing computer objects in Active Directory. 
-    It handles scenarios such as renaming the local computer, disjoining from a domain, deleting 
-    from Active Directory, and joining a domain with an Organizational Unit (OU) selection.
+    This script provides a GUI-based tool that allows administrators to manage computer objects in 
+    Active Directory, Entra ID (Azure AD), and Intune. The tool provides functionality to:
+    
+    - Join and disjoin computers from Active Directory domains, with support for selecting an Organizational Unit (OU).
+    - Delete inactive or unwanted computer accounts from Active Directory.
+    - Retrieve and display real-time system information such as:
+        - Computer Name
+        - IP Address
+        - Domain Join Status
+        - Entra ID Join Status (Hybrid or Azure AD Joined)
+        - SCCM Agent Installation and Status
+        - Co-Management (SCCM + Intune) Status
+    - Join or disjoin the computer from Entra ID (Azure AD).
+    - Enroll the computer into Intune as a personal device.
+    - Provide a user-friendly interface with WPF-based GUI elements, color-coded status indicators, and real-time updates.
+
+.PARAMETERS
+    DefaultDomainController  - The default domain controller to query Active Directory.
+    DefaultDomainName        - The default domain name used for domain joins.
+    DefaultSearchBase        - The default Active Directory Organizational Unit (OU) path.
+
+.FUNCTIONALITY
+    - `Update-PCInfo`: Retrieves and updates real-time system details in the GUI.
+    - `Join-ComputerWithOU`: Joins a computer to Active Directory with an assigned OU.
+    - `Disjoin-ComputerFromDomain`: Removes a computer from Active Directory and places it in a workgroup.
+    - `Delete-ComputerFromAD`: Deletes a computer account from Active Directory if it is inactive.
+    - `Join-EntraID`: Uses `dsregcmd /join` to register the device with Entra ID.
+    - `Disjoin-EntraID`: Uses `dsregcmd /leave` to unregister the device from Entra ID.
+    - `Join-IntuneAsPersonalDevice`: Launches the Intune enrollment page for personal device enrollment.
+    - `Show-OUWindow`: Displays an OU selection window for Active Directory join operations.
+    - `Prompt-Credentials`: Prompts the user for Active Directory credentials when necessary.
+    - `Prompt-Restart`: Prompts and initiates a system restart if required.
+    - `Show-WPFMessage`: Displays formatted WPF-based message dialogs.
+
+.REQUIREMENTS
+    - Windows 10/11 or Windows Server with PowerShell 5.1+.
+    - Administrative privileges to modify domain memberships.
+    - SCCM (Configuration Manager) agent installed for co-management detection.
+    - Active Directory module installed for domain operations.
+
+.EXAMPLE
+    # Run the script with default domain settings
+    .\JoinUnjoinComputerTool.ps1
+
+    # Run the script specifying a different domain controller
+    .\JoinUnjoinComputerTool.ps1 -DefaultDomainController "DC02.company.local"
 
 .NOTES
     Author  : Mohammad Abdulkader Omar
+    Website : https://momar.tech
     Date    : 2025-01-20
 #>
+
 
 ###############################################################################
 # PARAMETERS
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "DC01.company.local",            # Default Domain Controller
-    [string]$DefaultDomainName = "company.local",                       # Default Domain Name
-    [string]$DefaultSearchBase = "OU=Computers,DC=company,DC=local"     # Default Search Base
+    [string]$DefaultDomainController = "DC01.company.local",                  # Default Domain Controller
+    [string]$DefaultDomainName       = "company.local",                       # Default Domain Name
+    [string]$DefaultSearchBase       = "OU=Computers,DC=company,DC=local"     # Default Search Base
 )
 
 
