@@ -17,9 +17,9 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "winsrv01.osrah.sa",            # Default Domain Controller
-    [string]$DefaultDomainName = "osrah.sa",                       # Default Domain Name
-    [string]$DefaultSearchBase = "OU=Computers,OU=Osrah,DC=osrah,DC=sa"     # Default Search Base
+    [string]$DefaultDomainController = "DC01.company.local",            # Default Domain Controller
+    [string]$DefaultDomainName = "company.local",                       # Default Domain Name
+    [string]$DefaultSearchBase = "OU=Computers,DC=company,DC=local"     # Default Search Base
 )
 
 
@@ -453,106 +453,183 @@ Function Prompt-Restart {
 # Function to Populate PC Info with IP Address and Entra ID Status
 Function Update-PCInfo {
     try {
-        # Ensure UI elements exist
-        if (-not $Global:SCCMStatusBlock) { Show-WPFMessage -Message "ERROR: SCCMStatusBlock is NULL in Update-PCInfo!" -Title "Error" -Color Red }
-        if (-not $Global:CoManagementBlock) { Show-WPFMessage -Message "ERROR: CoManagementBlock is NULL in Update-PCInfo!" -Title "Error" -Color Red }
+        # ---------------------------------------------------------------------
+        # 1) Basic System Info (Computer Name, Domain)
+        # ---------------------------------------------------------------------
+        $computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
+        $ComputerName   = $computerSystem.Name
+        $DomainStatus   = if ($computerSystem.PartOfDomain) { "Domain Joined" } else { "Workgroup" }
 
-        # Get computer information
-        $ComputerName = $env:COMPUTERNAME
-        
-        # Get primary IPv4 address (excluding loopback)
-        $IPAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" -and $_.ValidLifetime -ne "Infinite" } | Select-Object -ExpandProperty IPAddress -First 1) -join ", "
-        $ComputerSystem = Get-WmiObject -Class Win32_ComputerSystem
-        $DomainStatus = if ($ComputerSystem.PartOfDomain) { "Domain Joined" } else { "Workgroup" }
+        # ---------------------------------------------------------------------
+        # 2) Primary IP Address
+        #    - Pick the NIC that is 'Up' with highest LinkSpeed, exclude 127.x 
+        #      and 169.254.x (APIPA). Then fallback to first valid IPv4 if none found.
+        # ---------------------------------------------------------------------
+        $IPAddress = $null
+        $nic = Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' } |
+               Sort-Object -Property LinkSpeed -Descending |
+               Select-Object -First 1
 
-        # Get Entra ID Status using dsregcmd
-        $dsregcmdOutput = dsregcmd /status | Out-String
+        if ($nic) {
+            $ip = Get-NetIPAddress -InterfaceIndex $nic.IfIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                  Where-Object { $_.IPAddress -notmatch '^127\.|^169\.254' } |
+                  Select-Object -ExpandProperty IPAddress -First 1
+            if ($ip) { $IPAddress = $ip }
+        }
+        # Fallback: if no NIC found above, pick *any* valid IPv4
+        if (-not $IPAddress) {
+            $IPAddress = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                         Where-Object { $_.IPAddress -notmatch '^127\.|^169\.254' } |
+                         Select-Object -ExpandProperty IPAddress -First 1
+        }
+
+        # ---------------------------------------------------------------------
+        # 3) Entra ID (Azure AD) Status via dsregcmd
+        # ---------------------------------------------------------------------
+        $dsregcmdOutput = dsregcmd /status 2>$null | Out-String
         if ($dsregcmdOutput -match "AzureAdJoined\s*:\s*YES" -and $dsregcmdOutput -match "DomainJoined\s*:\s*YES") {
             $EntraIDStatus = "Hybrid AD Joined"
-        } elseif ($dsregcmdOutput -match "AzureAdJoined\s*:\s*YES") {
+        }
+        elseif ($dsregcmdOutput -match "AzureAdJoined\s*:\s*YES") {
             $EntraIDStatus = "Azure AD Joined"
-        } else {
+        }
+        else {
             $EntraIDStatus = "Not Joined"
         }
 
-        # Detect SCCM Agent
-        $SCCMInstalled = Get-WmiObject -Namespace "root\ccm" -Class "SMS_Client" -ErrorAction SilentlyContinue
-        if ($SCCMInstalled) {
-            $SCCMStatus = "Installed"
-            $SCCMColor = "#28A745" # Green
-        } else {
+        # ---------------------------------------------------------------------
+        # 4) Detect SCCM (ccmexec service)
+        # ---------------------------------------------------------------------
+        $ccmExecService = Get-Service -Name ccmexec -ErrorAction SilentlyContinue
+        if ($ccmExecService) {
+            if ($ccmExecService.Status -eq 'Running') {
+                $SCCMStatus = "SCCM Client (Running)"
+                $SCCMColor  = "#28A745"  # Green
+            }
+            else {
+                $SCCMStatus = "SCCM Client (Stopped)"
+                $SCCMColor  = "#FFA500"  # Orange
+            }
+        }
+        else {
             $SCCMStatus = "Not Installed"
-            $SCCMColor = "#DC3545" # Red
+            $SCCMColor  = "#DC3545"  # Red
         }
 
-        # Detect Co-Management Status using Registry
-        # Initialize default values
+        # ---------------------------------------------------------------------
+        # 5) Co-Management Detection
+        #    a) Check WMI: root\ccm\CoManagementHandler:CoManagement_Configuration
+        #       - 'Enable' is a reliable indicator.
+        #    b) Fallback to CoManagementFlags for partial workload info.
+        #    c) Also check MDM auto-enrollment registry.
+        # ---------------------------------------------------------------------
         $CoManagementStatus = "Not Detected"
-        $CoManagementColor = "#DC3545"  # Default: Red (Disabled)
+        $CoManagementColor  = "#DC3545" # Red by default
 
-        # **Check SCCM Co-Management (CoManagementFlags)**
+        # 5a) WMI approach
+        try {
+            $cmConfig = Get-WmiObject -Namespace 'root\ccm\CoManagementHandler' -Class 'CoManagement_Configuration' -ErrorAction Stop
+            if ($cmConfig) {
+                if ($cmConfig.Enable) {
+                    # Co-management is actually on
+                    $CoManagementStatus = "Co-Management Enabled"
+                    $CoManagementColor  = "#28A745" # Green
+                }
+                else {
+                    $CoManagementStatus = "SCCM Present - Co-Management Disabled"
+                    $CoManagementColor  = "#DC3545" # Red
+                }
+            }
+        }
+        catch {
+            # If we can't query WMI, we'll rely on registry fallback
+            # or do nothing here
+        }
+
+        # 5b) Check the CoManagementFlags registry if present
         $CoManagementRegPath = "HKLM:\SOFTWARE\Microsoft\CCM"
         if (Test-Path $CoManagementRegPath) {
             try {
-                $CoManagementValue = Get-ItemProperty -Path $CoManagementRegPath -Name "CoManagementFlags" -ErrorAction SilentlyContinue
-                if ($CoManagementValue) {
-                    switch ($CoManagementValue.CoManagementFlags) {
-                        0   { $CoManagementStatus = "SCCM Only (No Co-Management)"; $CoManagementColor = "#DC3545" }  # Red
-                        1   { $CoManagementStatus = "SCCM Managed (Minimal)"; $CoManagementColor = "#FFA500" }  # Orange
-                        2   { $CoManagementStatus = "Pilot Intune (Partial)"; $CoManagementColor = "#0078D7" }  # Blue
-                        3   { $CoManagementStatus = "Full Co-Management Enabled"; $CoManagementColor = "#28A745" }  # Green
-                        255 { $CoManagementStatus = "Fully Intune Managed (All Workloads in Intune)"; $CoManagementColor = "#28A745" }  # Green
-                        default { $CoManagementStatus = "Unknown State"; $CoManagementColor = "#DC3545" }  # Red
+                $val = Get-ItemProperty -Path $CoManagementRegPath -Name "CoManagementFlags" -ErrorAction SilentlyContinue
+                if ($val) {
+                    $flags = $val.CoManagementFlags
+                    # If WMI didn't confirm 'Enable', we can at least show the flags:
+                    # e.g. "Advanced Co-Management (Flags=XYZ)"
+                    if ($CoManagementStatus -eq "Not Detected") {
+                        $CoManagementStatus = "Co-Management Flags=$flags"
+                        $CoManagementColor  = "#28A745" # Green
                     }
                 }
-            } catch {
-                 Show-WPFMessage -Message "DEBUG: SCCM Co-Management Registry Read Error -> $($_.Exception.Message)" -Title "Error" -Color Red
+            }
+            catch {
+                # optional logging or ignore
             }
         }
 
-        # **Check Intune Auto Enrollment via Policy**
+        # 5c) Check Intune Auto-Enrollment policy
         $AutoEnrollRegPath = "HKLM:\Software\Policies\Microsoft\Windows\CurrentVersion\MDM"
         if (Test-Path $AutoEnrollRegPath) {
             try {
                 $MDMValue = Get-ItemProperty -Path $AutoEnrollRegPath -Name "AutoEnrollMDM" -ErrorAction SilentlyContinue
                 if ($MDMValue -and $MDMValue.AutoEnrollMDM -eq 1) {
                     $CoManagementStatus = "Intune Auto Enrollment Enabled"
-                    $CoManagementColor = "#28A745"  # Green
+                    $CoManagementColor  = "#28A745" # Green
                 }
-            } catch {
-                 Show-WPFMessage -Message "DEBUG: Intune Auto Enrollment Registry Read Error -> $($_.Exception.Message)" -Title "Error" -Color Red
+            }
+            catch {
+                # optional logging or ignore
             }
         }
 
+        # ---------------------------------------------------------------------
+        # 6) Update the WPF UI (TextBlocks) via Dispatcher
+        # ---------------------------------------------------------------------
 
-        # Update UI Elements
-        $Global:PcNameBlock.Dispatcher.Invoke([action]{ $Global:PcNameBlock.Text = $ComputerName }, "Render")
-        $Global:PcIPAddressBlock.Dispatcher.Invoke([action]{ $Global:PcIPAddressBlock.Text = $IPAddress }, "Render")
-        $Global:PcDomainStatusBlock.Dispatcher.Invoke([action]{ 
-            $Global:PcDomainStatusBlock.Text = $DomainStatus 
+        # Computer Name
+        $Global:PcNameBlock.Dispatcher.Invoke([action]{
+            $Global:PcNameBlock.Text = $ComputerName
+        }, "Render")
+
+        # IP Address
+        $Global:PcIPAddressBlock.Dispatcher.Invoke([action]{
+            $Global:PcIPAddressBlock.Text = if ($IPAddress) { $IPAddress } else { "N/A" }
+        }, "Render")
+
+        # Domain or Workgroup
+        $Global:PcDomainStatusBlock.Dispatcher.Invoke([action]{
+            $Global:PcDomainStatusBlock.Text = $DomainStatus
             $Global:PcDomainStatusBlock.Background = if ($DomainStatus -eq "Domain Joined") { "#28A745" } else { "#DC3545" }
             $Global:PcDomainStatusBlock.Foreground = "White"
         }, "Render")
-        $Global:PcEntraIDStatusBlock.Dispatcher.Invoke([action]{ 
+
+        # Entra ID
+        $Global:PcEntraIDStatusBlock.Dispatcher.Invoke([action]{
             $Global:PcEntraIDStatusBlock.Text = $EntraIDStatus
-            $Global:PcEntraIDStatusBlock.Background = if ($EntraIDStatus -eq "Azure AD Joined" -or $EntraIDStatus -eq "Hybrid AD Joined") { "#28A745" } else { "#DC3545" }
+            $Global:PcEntraIDStatusBlock.Background = if ($EntraIDStatus -match "Joined") { "#28A745" } else { "#DC3545" }
             $Global:PcEntraIDStatusBlock.Foreground = "White"
         }, "Render")
-        $Global:SCCMStatusBlock.Dispatcher.Invoke([action]{ 
+
+        # SCCM
+        $Global:SCCMStatusBlock.Dispatcher.Invoke([action]{
             $Global:SCCMStatusBlock.Text = $SCCMStatus
             $Global:SCCMStatusBlock.Background = $SCCMColor
             $Global:SCCMStatusBlock.Foreground = "White"
         }, "Render")
-        $Global:CoManagementBlock.Dispatcher.Invoke([action]{ 
+
+        # Co-Management
+        $Global:CoManagementBlock.Dispatcher.Invoke([action]{
             $Global:CoManagementBlock.Text = $CoManagementStatus
             $Global:CoManagementBlock.Background = $CoManagementColor
             $Global:CoManagementBlock.Foreground = "White"
         }, "Render")
 
-    } catch {
+    }
+    catch {
         Show-WPFMessage -Message "Failed to update PC information: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 }
+
+
 
 # Function to Convert Hex Color to WPF Brush
 Function ConvertFrom-HexToColor {
@@ -920,40 +997,40 @@ Function Show-MainGUI {
         <StackPanel Grid.Row="1" Margin="20" Orientation="Vertical" VerticalAlignment="Top">
 
             <!-- First Section: Domain Controller, Domain Name, Search Base OU -->
-            <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,0,0,5">
+            <Border BorderBrush="#D3D3D3" BorderThickness="0.5"  Padding="10"  Margin="0,5,0,5">
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="Domain Configuration:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/> <!-- Domain Controller -->
-                            <RowDefinition Height="Auto"/> <!-- Domain Name -->
-                            <RowDefinition Height="Auto"/> <!-- Search Base -->
-                            <RowDefinition Height="Auto"/> <!-- Selected OU Row -->
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/> <!-- Label -->
-                            <ColumnDefinition Width="*"/>   <!-- Textbox -->
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Domain Controller -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Domain Controller:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="DomainControllerBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainController"
-                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Domain Controller:" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="DomainControllerBox" FontSize="14" Text="$DefaultDomainController"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="2" Margin="0,5,0,0"/>
 
                         <!-- Domain Name -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Domain Name:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="DomainNameBox" Width="400" Height="25" FontSize="12" Text="$DefaultDomainName"
-                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Domain Name:" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="DomainNameBox"  FontSize="14" Text="$DefaultDomainName"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="2" Margin="0,5,0,0"/>
 
                         <!-- Search Base OU -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox" Width="400" Height="25" FontSize="12" Text="$DefaultSearchBase"
-                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Base (OU):" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="SearchBaseBox"  FontSize="14" Text="$DefaultSearchBase"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="2" Margin="0,5,0,0"/>
 
                         <!-- Selected OU Section -->
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5" Visibility="Collapsed"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="SelectedOUBox" Width="400" Height="25" FontSize="12" IsReadOnly="True" Background="WhiteSmoke"
-                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="3" Margin="0,5,0,5" Visibility="Collapsed"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected OU:" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,5,10,5" Visibility="Collapsed"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="SelectedOUBox"  FontSize="14" IsReadOnly="True" Background="WhiteSmoke"
+                                 BorderBrush="#1E90FF" BorderThickness="1" Padding="2" Margin="0,5,0,0" Visibility="Collapsed"/>
 
                     </Grid>
                 </StackPanel>
@@ -978,25 +1055,25 @@ Function Show-MainGUI {
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Computer Name:" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PcNameBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"  />
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PcNameBlock" Text="Loading..." FontSize="14" Padding="2" Margin="5,3,0,0"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="IP Address:" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="PcIPAddressBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="PcIPAddressBlock" Text="Loading..." FontSize="14" Padding="2" Margin="5,3,0,0"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Domain Status:" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="PcDomainStatusBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="PcDomainStatusBlock" Text="Loading..." FontSize="14" Padding="2" Margin="5,3,0,0"/>
                     
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Entra ID Status:" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="PcEntraIDStatusBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="PcEntraIDStatusBlock" Text="Loading..." FontSize="14" Padding="2" Margin="5,3,0,0"/>
 
 
                     <!-- SCCM Agent Status -->
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="SCCM Agent:" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="SCCMStatusBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="SCCMStatusBlock" Text="Loading..." FontSize="14" Padding="2" Margin="5,3,0,0"/>
 
                     <!-- Co-Management Status -->
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="Co-Management:" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="CoManagementBlock" Text="Loading..." FontSize="14" Margin="5,3,0,0"/>
+                    <TextBlock Grid.Row="5" Grid.Column="1" x:Name="CoManagementBlock" Text="Loading..." FontSize="14" Padding="2" Margin="5,3,0,0"/>
 
 
                 </Grid>
@@ -1131,7 +1208,7 @@ Function Show-MainGUI {
 
         # Use DispatcherTimer to delay execution of Update-PCInfo
         $Timer = New-Object System.Windows.Threading.DispatcherTimer
-        $Timer.Interval = [TimeSpan]::FromMilliseconds(900)  # Wait 0.5 seconds before updating PC info
+        $Timer.Interval = [TimeSpan]::FromMilliseconds(500)  # Wait 0.5 seconds before updating PC info
         $Timer.Add_Tick({
             $Timer.Stop()
             Update-PCInfo
