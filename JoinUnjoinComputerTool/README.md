@@ -133,27 +133,4 @@ The script gathers system details using:
 
 This project is licensed under the **MIT License**. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.
 
----
 
-## Author
-
-Developed by **Mohammad Abdulkader Omar**  
-📌 Blog: [momar.tech](https://github.com/mabdulkadr)  
-📧 Contact: [YourEmail@example.com]  
-
----
-
-🚀 **Feel free to contribute, submit issues, or fork this repository!**
-```
-
----
-
-### ✨ **Enhancements in this version:**
-✔ **Improved formatting** for readability.  
-✔ **Clearer explanations** of each function.  
-✔ **Detailed troubleshooting** section.  
-✔ **Better UI descriptions** (color-coded statuses).  
-✔ **Added installation steps** with PowerShell commands.  
-✔ **Screenshots placeholder** (Add relevant images).  
-
-Let me know if you want any further improvements! 🚀🔥
