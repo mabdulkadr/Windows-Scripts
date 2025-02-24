@@ -51,7 +51,7 @@
 ## Screenshots
 
 ### 🔹 Main UI
-*(Add screenshots of the main interface and key features here.)*
+![Screenshot](Screenshot.png)
 
 ---
 
