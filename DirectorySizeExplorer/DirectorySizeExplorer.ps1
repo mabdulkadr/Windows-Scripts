@@ -8,10 +8,7 @@
    of each folder. Folders are colored light yellow and files light gray.  
    Includes a header, footer, "Go Back" functionality, and context menu options.
 
-.NOTES
-   - Header: "Join / Unjoin Computer Tool"
-   - Footer: "© 2025 M.omar (momar.tech) - All Rights Reserved"
-   - Recursive scanning can be slow for large directories.
+
 #>
 
 Add-Type -AssemblyName PresentationFramework
