@@ -1,98 +1,165 @@
 
-# Directory Size Explorer GUI Tool
+# 📁 Directory Size Explorer - PowerShell GUI Tool
 
+![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)
+![Windows](https://img.shields.io/badge/OS-Windows-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Status](https://img.shields.io/badge/Status-Stable-brightgreen.svg)
 
-## Overview
+## 📌 Overview
 
-**Directory Size Explorer** is a PowerShell-based GUI tool that allows you to scan a specified directory and display the sizes of files and folders recursively. The tool provides a clear visual distinction between folders and files through color coding and icons, and includes features for navigation, deletion, and detailed property viewing. A standard header and footer are included for branding consistency across GUI tools.
+**Directory Size Explorer** is a modern PowerShell-based **GUI tool** that allows users to scan a selected directory and display the **fully recursive sizes** of files and folders. It provides an intuitive and **sortable DataGrid interface**, along with a **context menu for file operations** and an elegant **header and footer for branding**.
 
-## Features
+This tool is useful for **system administrators, IT professionals, and end-users** who need **real-time file size analysis, folder organization insights, and storage management**.
 
-- **Recursive Folder Size Calculation:**  
-  Accurately calculates the total size of each folder (including all subfolders).
+## ✨ Features
 
-- **DataGrid Display:**  
-  Displays folder and file details (icon, path, size, and modified date) in a sortable WPF DataGrid.  
-  - **Row Coloring:** Folders are highlighted with a light yellow background and files with a light gray background.
-  - **Numeric Sorting:** The grid sorts by the underlying numeric size while displaying human-readable size strings.
+✅ **Recursive Folder Size Calculation** – Accurately computes the **total size** of each folder, including subdirectories.  
+✅ **Interactive GUI with DataGrid** – Displays results in a **sortable, searchable, and user-friendly** list.  
+✅ **Folder & File Differentiation** – Uses **📁 (folder) and 📄 (file) symbols**, with distinct row coloring:  
+   - **Folders:** Light yellow background  
+   - **Files:** Light gray background  
+✅ **Sorting by Size** – Ensures correct **numeric sorting** instead of string-based sorting using `SortMemberPath="Size"`.  
+✅ **Navigation Controls** –  
+   - **Browse:** Select a directory from an interactive folder picker.  
+   - **Go Back:** Navigate one folder level up with a **single click**.  
+✅ **File & Folder Operations (Context Menu)** – Right-click an item in the grid to:  
+   - **Open in Explorer**
+   - **Scan Single Item (Measure Size)**
+   - **View Properties** (detailed metadata: size, modified date, creation date)  
+✅ **Delete Functionality** – Select a file/folder and click **Delete** to remove it from the system.  
+✅ **Modern Header & Footer for Branding** –  
+   - **Header:** Blue banner with `"Directory Size Explorer"` title.  
+   - **Footer:** `"© 2025 M.omar (momar.tech) - All Rights Reserved"` displayed at the bottom.  
 
-- **Navigation:**  
-  The **Go Back** button allows you to move up one folder level using the current scanned directory.
+## 🖥️ GUI Preview
 
-- **Context Menu Options:**  
-  Right-clicking on a row brings up options to:
-  - **Open in Explorer:** Launch the selected folder/file in Windows Explorer.
-  - **Scan Single:** Display the size of the selected item (measured recursively for folders).
-  - **Properties:** View detailed information about the selected item.
+### Light Mode
+![GUI Preview - Light Mode](https://user-images.githubusercontent.com/placeholder/light-mode.png)
 
-- **Standard Header and Footer:**  
-  - **Header:** A blue banner with the text "Join / Unjoin Computer Tool".  
-  - **Footer:** A light-gray section displaying "© 2025 M.omar (momar.tech) - All Rights Reserved".
+### Dark Mode
+![GUI Preview - Dark Mode](https://user-images.githubusercontent.com/placeholder/dark-mode.png)
 
-## Requirements
+---
 
-- **Operating System:** Windows  
-- **PowerShell Version:** PowerShell 5.1 or higher  
-- **.NET Framework:** 4.5 or later
+## ⚙️ Installation & Requirements
 
-## Usage
+### ✅ Prerequisites:
+- **Operating System:** Windows 10/11  
+- **PowerShell Version:** PowerShell 5.1+  
+- **.NET Framework:** 4.5 or later (default on most modern Windows versions)  
 
-1. **Launch PowerShell:**  
-   Open PowerShell (preferably as Administrator if scanning system directories).
+### 🔧 Installation Steps:
 
-2. **Run the Script:**  
-   Navigate to the directory containing `DirectorySizeExplorer.ps1` and execute:
+1️⃣ **Download the Script:**  
+   - Clone the repository or download the `DirectorySizeExplorer.ps1` file.
+   ```powershell
+   git clone https://github.com/mabdulkadr/DirectorySizeExplorer.git
+   cd DirectorySizeExplorer
+   ```
+
+2️⃣ **Run the Script in PowerShell:**  
    ```powershell
    .\DirectorySizeExplorer.ps1
    ```
 
-3. **Select a Directory:**  
-   - Enter the directory path manually or click the **Browse** button to choose a directory.
+3️⃣ **Allow Execution (If Required):**  
+   If you get an execution policy error, allow the script to run:
+   ```powershell
+   Set-ExecutionPolicy Unrestricted -Scope Process
+   ```
 
-4. **Scan the Directory:**  
-   - Click **Scan** to scan the directory.
-   - If a folder is selected in the results grid, that folder will be scanned instead.
-   - If a file is selected, a message is displayed indicating that files cannot be scanned.
+---
 
-5. **Navigate:**  
-   - Use the **Go Back** button to move up one folder level from the current folder.
+## 📌 How to Use
 
-6. **Manage Items:**  
-   - **Delete:** Select an item in the grid and click **Delete** to remove it from disk.
-   - **Context Menu:** Right-click an item for additional options:
-     - **Open in Explorer**
-     - **Scan Single** (display the size of just that item)
-     - **Properties** (view detailed item information)
+### 1️⃣ **Select a Directory**
+- **Manually Enter Path** in the text box **OR**  
+- **Click "Browse"** to open the folder selection dialog.
 
-7. **Exit the Application:**  
-   Click the **Exit** button to close the GUI.
+### 2️⃣ **Scan the Directory**
+- Click the **Scan** button to analyze the selected directory.
+- **If a folder is selected in the grid**, that folder will be scanned instead.
+- **If a file is selected**, a message will indicate that files cannot be scanned.
 
-## Customization
+### 3️⃣ **Navigate Between Folders**
+- Use the **Go Back** button to move up **one directory level**.
+- **Double-click a folder** in the list to open it in **File Explorer**.
 
-- **Header/Footer:**  
-  Modify the header and footer text in the XAML section to fit your branding.
+### 4️⃣ **Perform Actions on Items**
+- **Right-click an item** in the results grid to:
+  - **Open in Explorer**
+  - **Scan Single Item (Measure Size)**
+  - **View Properties** (size, modified date, etc.)
 
-- **Appearance:**  
-  Adjust the colors, fonts, and layout by editing the XAML.  
-  For example, you can change the row colors by modifying the DataGrid.RowStyle.
+### 5️⃣ **Delete Files or Folders**
+- Select an item in the list and click **Delete** to remove it permanently.
+- **⚠️ Warning:** Deleting a folder will remove all contents inside.
 
-## Troubleshooting
+### 6️⃣ **Exit the Tool**
+- Click **Exit** to close the GUI.
 
-- **Slow Performance:**  
-  Recursive scanning may take time for large directories. Consider scanning smaller directories or optimizing the script for performance if needed.
+---
 
-- **Permissions Issues:**  
-  Ensure you have sufficient permissions to access the directories and files you want to scan.
+## 🚀 Advanced Features & Customization
 
-- **Sorting Anomalies:**  
-  The grid sorts on the numeric `Size` property while displaying the human-readable `PrettySize`. Ensure your data items maintain consistent property types for correct sorting.
+### 🎨 Customize Header/Footer:
+Modify the XAML layout to **change branding elements**:
 
-## License
+- **Modify the Header Text & Color:**
+  ```xml
+  <Border Grid.Row="0" Background="#0078D7" Padding="15">
+      <TextBlock Text="Your Custom Header"
+                 Foreground="White"
+                 FontSize="24"
+                 FontWeight="Bold"/>
+  </Border>
+  ```
+- **Modify the Footer Text:**
+  ```xml
+  <Border Grid.Row="6" Background="#D3D3D3" Padding="5">
+      <TextBlock Text="© 2025 YourCompany - All Rights Reserved"
+                 Foreground="Black" 
+                 FontSize="10" />
+  </Border>
+  ```
+
+### 🚀 Performance Optimization
+- **Recursive folder scanning** can be slow for large directories. To **improve speed**, consider:
+  - **Using Parallel Processing:** Implement `Start-Job` to scan multiple folders simultaneously.
+  - **Limiting Scan Depth:** Modify `Get-ChildItem` to exclude deep subdirectories.
+
+---
+
+## 🛠️ Troubleshooting & FAQs
+
+### 🔹 "Script is blocked from running"
+**Solution:** Unblock the script:
+```powershell
+Unblock-File -Path .\DirectorySizeExplorer.ps1
+```
+
+### 🔹 "Folder sizes are showing as 0 KB"
+**Cause:** Windows **denies access** to system directories for standard users.  
+**Solution:** Run PowerShell as Administrator.
+
+### 🔹 "Sorting by size is incorrect"
+**Cause:** WPF’s default sorting is **string-based** instead of numeric.  
+**Solution:** The script fixes this by using:
+```xml
+<DataGridTextColumn Header="Size" Binding="{Binding PrettySize}" SortMemberPath="Size" />
+```
+Ensure all data objects maintain a consistent `Size` type (`[long]`).
+
+### 🔹 "Performance is slow on large directories"
+**Solution:**  
+- **Exclude unnecessary subdirectories.**
+- **Run PowerShell in Administrator mode** for faster access to protected files.
+- **Modify `Get-ChildItem` to scan only a limited depth**.
+
+---
+
+## 🔖 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
-
-**Disclaimer**: These scripts are provided as-is. Test them in a staging environment before use in production. The author is not responsible for any unintended outcomes resulting from their use.
