@@ -62,9 +62,9 @@
 ###############################################################################
 [CmdletBinding()]
 Param(
-    [string]$DefaultDomainController = "DC01.company.local",   # Default Domain Controller
-    [string]$DefaultDomainName       = "company.local",        # Default Domain Name
-    [string]$DefaultSearchBase       = "OU=Computers,DC=company,DC=local"  # Default Search Base
+    [string]$DefaultDomainController = "DC01.company.local",            # Default Domain Controller
+    [string]$DefaultDomainName = "company.local",                       # Default Domain Name
+    [string]$DefaultSearchBase = "OU=Computers,DC=company,DC=local"     # Default Search Base
 )
 
 # Load the required WPF assemblies
@@ -444,49 +444,61 @@ Function Prompt-Restart {
     }
 }
 
-# NEW: Update-PCInfo using Start-Job + DispatcherTimer (no freezing).
+Function Get-BasicPCInfo {
+    try {
+        # Basic System Info
+        $computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
+        $ComputerName   = $computerSystem.Name
+        $DomainStatus   = if ($computerSystem.PartOfDomain) { "Domain Joined" } else { "Workgroup" }
+
+        # IP Address
+        $IPAddress = $null
+        try {
+            $nic = Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' } |
+                   Sort-Object -Property LinkSpeed -Descending | Select-Object -First 1
+            if ($nic) {
+                $ip = Get-NetIPAddress -InterfaceIndex $nic.IfIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                      Where-Object { $_.IPAddress -notmatch '^127\.|^169\.254' } |
+                      Select-Object -ExpandProperty IPAddress -First 1
+                if ($ip) { $IPAddress = $ip }
+            }
+            if (-not $IPAddress) {
+                $IPAddress = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                             Where-Object { $_.IPAddress -notmatch '^127\.|^169\.254' } |
+                             Select-Object -ExpandProperty IPAddress -First 1
+            }
+        }
+        catch {
+            # If there's an error, IP remains null
+        }
+
+        return [PSCustomObject]@{
+            ComputerName = $ComputerName
+            IPAddress    = if ($IPAddress) { $IPAddress } else { "N/A" }
+            DomainStatus = $DomainStatus
+        }
+    }
+    catch {
+        return $null
+    }
+}
+
 Function Update-PCInfo {
 
-    # 1) Clear any old job if it’s finished or failed
+    # Clean up any old job
     if ($Global:PCInfoJob -and ($Global:PCInfoJob.State -in @('Completed','Failed','Stopped'))) {
         Receive-Job -Job $Global:PCInfoJob -ErrorAction SilentlyContinue | Out-Null
-        Remove-Job  -Job $Global:PCInfoJob -Force | Out-Null
+        Remove-Job -Job $Global:PCInfoJob -Force | Out-Null
         $Global:PCInfoJob = $null
     }
     elseif ($Global:PCInfoJob -and ($Global:PCInfoJob.State -eq 'Running')) {
-        # If you prefer to allow only one job at a time, uncomment next line:
         Show-WPFMessage -Message "A PC Info update is already in progress." -Title "Info" -Color Blue
         return
     }
 
-    # 2) Start a background job to gather PC info
     $Global:PCInfoJob = Start-Job -ScriptBlock {
         try {
-            # 1) Basic System Info
-            $computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
-            $ComputerName   = $computerSystem.Name
-            $DomainStatus   = if ($computerSystem.PartOfDomain) { "Domain Joined" } else { "Workgroup" }
-
-            # 2) Primary IP
-            $IPAddress = $null
-            try {
-                $nic = Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' } |
-                       Sort-Object -Property LinkSpeed -Descending | Select-Object -First 1
-                if ($nic) {
-                    $ip = Get-NetIPAddress -InterfaceIndex $nic.IfIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue |
-                          Where-Object { $_.IPAddress -notmatch '^127\.|^169\.254' } |
-                          Select-Object -ExpandProperty IPAddress -First 1
-                    if ($ip) { $IPAddress = $ip }
-                }
-                if (-not $IPAddress) {
-                    $IPAddress = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
-                                 Where-Object { $_.IPAddress -notmatch '^127\.|^169\.254' } |
-                                 Select-Object -ExpandProperty IPAddress -First 1
-                }
-            }
-            catch { }
-
-            # 3) Entra ID (Azure AD) Status
+            # 1) Entra ID (Azure AD) Status
             $dsregcmdOutput = dsregcmd /status 2>$null | Out-String
             if ($dsregcmdOutput -match "AzureAdJoined\s*:\s*YES" -and $dsregcmdOutput -match "DomainJoined\s*:\s*YES") {
                 $EntraIDStatus = "Hybrid AD Joined"
@@ -498,7 +510,7 @@ Function Update-PCInfo {
                 $EntraIDStatus = "Not Joined"
             }
 
-            # 4) SCCM (ccmexec)
+            # 2) SCCM
             $SCCMStatus = "Not Installed"
             $SCCMColor  = "#DC3545"
             $ccmExecService = Get-Service -Name ccmexec -ErrorAction SilentlyContinue
@@ -513,9 +525,10 @@ Function Update-PCInfo {
                 }
             }
 
-            # 5) Co-Management
+            # 3) Co-Management
             $CoManagementStatus = "Not Detected"
             $CoManagementColor  = "#DC3545"
+
             try {
                 $cmConfig = Get-WmiObject -Namespace 'root\ccm\CoManagementHandler' -Class 'CoManagement_Configuration' -ErrorAction Stop
                 if ($cmConfig -and $cmConfig.Enable) {
@@ -542,6 +555,7 @@ Function Update-PCInfo {
                     }
                 } catch { }
             }
+
             $AutoEnrollRegPath = "HKLM:\Software\Policies\Microsoft\Windows\CurrentVersion\MDM"
             if (Test-Path $AutoEnrollRegPath) {
                 try {
@@ -553,11 +567,8 @@ Function Update-PCInfo {
                 } catch { }
             }
 
-            # Build a single PSCustomObject
+            # Return object
             [PSCustomObject]@{
-                ComputerName       = $ComputerName
-                DomainStatus       = $DomainStatus
-                IPAddress          = if ($IPAddress) { $IPAddress } else { "N/A" }
                 EntraIDStatus      = $EntraIDStatus
                 SCCMStatus         = $SCCMStatus
                 SCCMColor          = $SCCMColor
@@ -566,14 +577,12 @@ Function Update-PCInfo {
             }
         }
         catch {
-            # Let the job throw if there's an error
             throw $_
         }
     }
 
-    # 3) Use a DispatcherTimer to poll the job and update UI
+    # Use a DispatcherTimer to poll the job
     if ($Global:PCInfoTimer) {
-        # Stop old timer if still around
         $Global:PCInfoTimer.Stop()
         $Global:PCInfoTimer = $null
     }
@@ -585,39 +594,40 @@ Function Update-PCInfo {
     $Global:PCInfoTimer.Add_Tick({
         if (-not $Global:PCInfoJob) { return }
 
-        # Collect any new output from the job (usually just once).
         $newData = Receive-Job -Job $Global:PCInfoJob -Keep -ErrorAction SilentlyContinue
         if ($newData) {
-            # We expect a single PSCustomObject. Let's take the last item in case.
             $result = $newData[-1]
-
-            # Update UI via dispatcher
             try {
-                $Global:PcNameBlock.Dispatcher.Invoke([action]{
-                    $Global:PcNameBlock.Text = $result.ComputerName
-                })
-                $Global:PcIPAddressBlock.Dispatcher.Invoke([action]{
-                    $Global:PcIPAddressBlock.Text = $result.IPAddress
-                })
-                $Global:PcDomainStatusBlock.Dispatcher.Invoke([action]{
-                    $Global:PcDomainStatusBlock.Text = $result.DomainStatus
-                    $Global:PcDomainStatusBlock.Background = if ($result.DomainStatus -eq "Domain Joined") { "#28A745" } else { "#DC3545" }
-                    $Global:PcDomainStatusBlock.Foreground = "White"
-                })
+                # Update advanced fields
                 $Global:PcEntraIDStatusBlock.Dispatcher.Invoke([action]{
-                    $Global:PcEntraIDStatusBlock.Text = $result.EntraIDStatus
-                    $Global:PcEntraIDStatusBlock.Background = if ($result.EntraIDStatus -match "Joined") { "#28A745" } else { "#DC3545" }
-                    $Global:PcEntraIDStatusBlock.Foreground = "White"
+                $Global:PcEntraIDStatusBlock.Text = $result.EntraIDStatus
+                $Global:PcEntraIDStatusBlock.Foreground = [System.Windows.Media.Brushes]::White
+                if ($result.EntraIDStatus -match "Not Joined") {
+                    $Global:PcEntraIDStatusBlock.Background = "#DC3545"   # Red
+                }
+                else {
+                    $Global:PcEntraIDStatusBlock.Background = "#28A745"   # Green
+                }
                 })
                 $Global:SCCMStatusBlock.Dispatcher.Invoke([action]{
-                    $Global:SCCMStatusBlock.Text = $result.SCCMStatus
-                    $Global:SCCMStatusBlock.Background = $result.SCCMColor
-                    $Global:SCCMStatusBlock.Foreground = "White"
+                $Global:SCCMStatusBlock.Text = $result.SCCMStatus
+                $Global:SCCMStatusBlock.Foreground = [System.Windows.Media.Brushes]::White
+                if ($result.EntraIDStatus -match "Not Installed") {
+                $Global:SCCMStatusBlock.Background = "#DC3545"   # Red
+                }
+                else {
+                $Global:SCCMStatusBlock.Background = "#28A745"   # Green
+                }
                 })
                 $Global:CoManagementBlock.Dispatcher.Invoke([action]{
-                    $Global:CoManagementBlock.Text = $result.CoManagementStatus
-                    $Global:CoManagementBlock.Background = $result.CoManagementColor
-                    $Global:CoManagementBlock.Foreground = "White"
+                $Global:CoManagementBlock.Text = $result.CoManagementStatus
+                $Global:CoManagementBlock.Foreground = [System.Windows.Media.Brushes]::White
+                 if ($result.EntraIDStatus -match "Not Detected") {
+                $Global:CoManagementBlock.Background = "#DC3545"   # Red
+                }
+                else {
+                $Global:CoManagementBlock.Background = "#28A745"   # Green
+                }
                 })
             }
             catch {
@@ -625,7 +635,6 @@ Function Update-PCInfo {
             }
         }
 
-        # If the job is no longer running, clean up
         if ($Global:PCInfoJob.State -in @('Completed','Failed','Stopped')) {
             $Global:PCInfoTimer.Stop()
             Receive-Job -Job $Global:PCInfoJob -ErrorAction SilentlyContinue | Out-Null
@@ -821,28 +830,49 @@ Function Show-OUWindow {
     [xml]$OUXAML = @"
 <Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
         xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
-        Title='Select Organizational Unit' Width='600' Height='400'
-        Background='#F0F0F0' WindowStartupLocation='CenterScreen' ResizeMode='NoResize'>
+        Title='Select Organizational Unit'
+        Width='600'
+        Height='450'
+        Background='#F0F0F0'
+        WindowStartupLocation='CenterScreen'
+        ResizeMode='NoResize'>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height='*'/>     <!-- Main Content -->
-            <RowDefinition Height='Auto'/>  <!-- Buttons -->
+            <RowDefinition Height='Auto'/>   <!-- Search Panel -->
+            <RowDefinition Height='*'/>      <!-- DataGrid -->
+            <RowDefinition Height='Auto'/>   <!-- Buttons -->
         </Grid.RowDefinitions>
 
+        <!-- Search Panel -->
+        <StackPanel Grid.Row='0' Orientation='Horizontal' Margin='10'>
+            <Label Content='Search:' VerticalAlignment='Center'/>
+            <TextBox x:Name='SearchTextBox' Width='300' Margin='5,0,0,0'/>
+            <Button x:Name='SearchButton' Content='Search' Width='80' Margin='5,0,0,0'
+                    Background='#0078D7' Foreground='White'/>
+        </StackPanel>
+
         <!-- DataGrid for OUs -->
-        <DataGrid x:Name='OUDataGrid' Grid.Row='0' AutoGenerateColumns='False' CanUserAddRows='False' IsReadOnly='True'
-                  BorderBrush='#1E90FF' BorderThickness='1' Margin='10'>
+        <DataGrid x:Name='OUDataGrid'
+                  Grid.Row='1'
+                  AutoGenerateColumns='False'
+                  CanUserAddRows='False'
+                  IsReadOnly='True'
+                  BorderBrush='#1E90FF'
+                  BorderThickness='1'
+                  Margin='10'>
             <DataGrid.Columns>
                 <DataGridTextColumn Header='Name' Binding='{Binding Name}' Width='150'/>
                 <DataGridTextColumn Header='Description' Binding='{Binding Description}' Width='250'/>
-                <DataGridTextColumn Header='Distinguished Name' Binding='{Binding DistinguishedName}' Width='350'/>
+                <DataGridTextColumn Header='Distinguished Name' Binding='{Binding DistinguishedName}' Width='*'/>
             </DataGrid.Columns>
         </DataGrid>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row='1' Orientation='Horizontal' HorizontalAlignment='Right' Margin='10'>
-            <Button x:Name='SelectButton' Content='Select' Width='100' Margin='5' Background='#32CD32' Foreground='White' FontWeight='Bold'/>
-            <Button x:Name='CancelButton' Content='Cancel' Width='100' Margin='5' Background='#FF6347' Foreground='White' FontWeight='Bold'/>
+        <StackPanel Grid.Row='2' Orientation='Horizontal' HorizontalAlignment='Right' Margin='10'>
+            <Button x:Name='SelectButton' Content='Select' Width='100' Height='30' Margin='5'
+                    Background='#32CD32' Foreground='White' FontWeight='Bold'/>
+            <Button x:Name='CancelButton' Content='Cancel' Width='100' Height='30' Margin='5'
+                    Background='#FF6347' Foreground='White' FontWeight='Bold'/>
         </StackPanel>
     </Grid>
 </Window>
@@ -852,10 +882,15 @@ Function Show-OUWindow {
         $OUReader = New-Object System.Xml.XmlNodeReader $OUXAML
         $OUWindow = [System.Windows.Markup.XamlReader]::Load($OUReader)
 
+        # Retrieve controls
         $OUDataGrid    = $OUWindow.FindName('OUDataGrid')
+        $SearchTextBox = $OUWindow.FindName('SearchTextBox')
+        $SearchButton  = $OUWindow.FindName('SearchButton')
         $SelectButton  = $OUWindow.FindName('SelectButton')
         $CancelButton  = $OUWindow.FindName('CancelButton')
 
+        # Retrieve OUs from Active Directory and store them in $AllOUs
+        $AllOUs = @()
         try {
             $DomainController = $DomainControllerBox.Text.Trim()
             $SearchBase       = $SearchBaseBox.Text.Trim()
@@ -868,11 +903,10 @@ Function Show-OUWindow {
             )
             $Searcher = New-Object DirectoryServices.DirectorySearcher($DirectoryEntry)
             $Searcher.Filter = "(objectClass=organizationalUnit)"
-            $Searcher.PropertiesToLoad.Add("name")           | Out-Null
-            $Searcher.PropertiesToLoad.Add("description")    | Out-Null
+            $Searcher.PropertiesToLoad.Add("name") | Out-Null
+            $Searcher.PropertiesToLoad.Add("description") | Out-Null
             $Searcher.PropertiesToLoad.Add("distinguishedName") | Out-Null
 
-            $OUList = @()
             $Results = $Searcher.FindAll()
 
             foreach ($Result in $Results) {
@@ -881,10 +915,11 @@ Function Show-OUWindow {
                     Description       = ($Result.Properties["description"] -join ", ") -replace "^$", "N/A"
                     DistinguishedName = $Result.Properties["distinguishedName"][0]
                 }
-                $OUList += $OUItem
+                $AllOUs += $OUItem
             }
 
-            $OUDataGrid.ItemsSource = $OUList
+            # Set the initial DataGrid ItemsSource to all retrieved OUs
+            $OUDataGrid.ItemsSource = $AllOUs
         }
         catch {
             if ($_.Exception.Message -match "The server is not operational") {
@@ -894,10 +929,30 @@ Function Show-OUWindow {
                 - OU Search Base" -Title "Error" -Color Red
             }
             else {
-                Show-WPFMessage -Message  "Failed to retrieve OUs: $($_.Exception.Message)" -Title "Error" -Color Red
+                Show-WPFMessage -Message "Failed to retrieve OUs: $($_.Exception.Message)" -Title "Error" -Color Red
             }
         }
 
+        # Add search functionality: filter the OU list when Search is clicked.
+        $SearchButton.Add_Click({
+            $searchText = $SearchTextBox.Text.Trim()
+            if ($searchText -eq "") {
+                # Reset to all OUs if search text is empty.
+                $OUDataGrid.ItemsSource = $AllOUs
+            }
+            else {
+                $filteredOUs = @(
+                    $AllOUs | Where-Object {
+                        $_.Name -match $searchText -or
+                        $_.Description -match $searchText -or
+                        $_.DistinguishedName -match $searchText
+                    }
+                )
+                $OUDataGrid.ItemsSource = $filteredOUs
+            }
+        })
+
+        # Handle selection and cancellation
         $SelectedOU = $null
         $SelectButton.Add_Click({
             $SelectedOU = $OUDataGrid.SelectedItem
@@ -907,7 +962,7 @@ Function Show-OUWindow {
                 $OUWindow.Close()
             }
             else {
-                Show-WPFMessage -Message  "No OU selected. Please select an OU before proceeding." -Title "Error" -Color Red
+                Show-WPFMessage -Message "No OU selected. Please select an OU before proceeding." -Title "Error" -Color Red
             }
         })
         $CancelButton.Add_Click({
@@ -920,6 +975,7 @@ Function Show-OUWindow {
         Show-WPFMessage -Message "Failed to load the OU selection window: $($_.Exception.Message)" -Title "Error" -Color Red
     }
 }
+
 
 ###############################################################################
 # MAIN GUI
@@ -1073,36 +1129,52 @@ Function Show-MainGUI {
         $Window = [System.Windows.Markup.XamlReader]::Load($Reader)
 
         # Assign GUI controls
-        $DomainControllerBox = $Window.FindName('DomainControllerBox')
-        $DomainNameBox       = $Window.FindName('DomainNameBox')
-        $SearchBaseBox       = $Window.FindName('SearchBaseBox')
-        $SelectedOUBox       = $Window.FindName('SelectedOUBox')
+        $DomainControllerBox       = $Window.FindName('DomainControllerBox')
+        $DomainNameBox             = $Window.FindName('DomainNameBox')
+        $SearchBaseBox             = $Window.FindName('SearchBaseBox')
+        $SelectedOUBox             = $Window.FindName('SelectedOUBox')
 
-        $DeleteButton   = $Window.FindName('DeleteButton')
-        $DisjoinButton  = $Window.FindName('DisjoinButton')
-        $JoinButton     = $Window.FindName('JoinButton')
+        $DeleteButton              = $Window.FindName('DeleteButton')
+        $DisjoinButton             = $Window.FindName('DisjoinButton')
+        $JoinButton                = $Window.FindName('JoinButton')
 
-        $Global:PcNameBlock         = $Window.FindName('PcNameBlock')
-        $Global:PcDomainStatusBlock = $Window.FindName('PcDomainStatusBlock')
-        $Global:PcIPAddressBlock    = $Window.FindName('PcIPAddressBlock')
+        # Global references for text blocks
+        $Global:PcNameBlock        = $Window.FindName('PcNameBlock')
+        $Global:PcIPAddressBlock   = $Window.FindName('PcIPAddressBlock')
+        $Global:PcDomainStatusBlock= $Window.FindName('PcDomainStatusBlock')
         $Global:PcEntraIDStatusBlock= $Window.FindName('PcEntraIDStatusBlock')
-        $Global:SCCMStatusBlock     = $Window.FindName('SCCMStatusBlock')
-        $Global:CoManagementBlock   = $Window.FindName('CoManagementBlock')
+        $Global:SCCMStatusBlock    = $Window.FindName('SCCMStatusBlock')
+        $Global:CoManagementBlock  = $Window.FindName('CoManagementBlock')
 
-        $JoinEntraIDButton          = $Window.FindName('JoinEntraIDButton')
-        $DisjoinEntraIDButton       = $Window.FindName('DisjoinEntraIDButton')
-        $JoinIntunePersonalButton   = $Window.FindName('JoinIntunePersonalButton')
+        $JoinEntraIDButton         = $Window.FindName('JoinEntraIDButton')
+        $DisjoinEntraIDButton      = $Window.FindName('DisjoinEntraIDButton')
+        $JoinIntunePersonalButton  = $Window.FindName('JoinIntunePersonalButton')
 
-        # Basic validation
-        if (-not $Global:PcIPAddressBlock)    { Show-WPFMessage -Message "ERROR: PcIPAddressBlock is NULL! Check XAML element name." -Title "Error" -Color Red }
-        if (-not $Global:PcEntraIDStatusBlock){ Show-WPFMessage -Message "ERROR: PcEntraIDStatusBlock is NULL! Check XAML element name." -Title "Error" -Color Red }
-        if (-not $Global:SCCMStatusBlock)     { Write-Host "ERROR: SCCMStatusBlock is NULL!" -ForegroundColor Red }
-        if (-not $Global:CoManagementBlock)   { Write-Host "ERROR: CoManagementBlock is NULL!" -ForegroundColor Red }
+        # (Optional) Basic validation checks on the text blocks...
 
-        # Immediately run PC info update (async, no freeze).
+        # 1) Immediately fetch basic info (Computer Name, IP, Domain) synchronously
+        $basicInfo = Get-BasicPCInfo
+        if ($basicInfo) {
+            $Global:PcNameBlock.Text = $basicInfo.ComputerName
+            $Global:PcIPAddressBlock.Text = $basicInfo.IPAddress
+            $Global:PcDomainStatusBlock.Text = $basicInfo.DomainStatus
+            # Color code Domain Status
+            $Global:PcDomainStatusBlock.Background = if ($basicInfo.DomainStatus -eq "Domain Joined") { "#28A745" } else { "#DC3545" }
+            $Global:PcDomainStatusBlock.Foreground = "White"
+        }
+        else {
+            $Global:PcNameBlock.Text = "N/A"
+            $Global:PcIPAddressBlock.Text = "N/A"
+            $Global:PcDomainStatusBlock.Text = "Unknown"
+            $Global:PcDomainStatusBlock.Background = "#FFA500"
+            $Global:PcDomainStatusBlock.Foreground = "White"
+        }
+
+        # 2) Kick off the background job for the remaining fields
         Update-PCInfo
+        Get-BasicPCInfo
 
-        # Event Handlers
+        # 3) Wire up the rest of your button click events
         $DeleteButton.Add_Click({
             Prompt-Credentials
             $ComputerName    = $env:COMPUTERNAME
@@ -1114,8 +1186,6 @@ Function Show-MainGUI {
         $DisjoinButton.Add_Click({
             Prompt-Credentials
             $ComputerName    = $env:COMPUTERNAME
-            $DomainController= $DomainControllerBox.Text.Trim()
-            $SearchBase      = $SearchBaseBox.Text.Trim()
             Disjoin-ComputerFromDomain -ComputerName $ComputerName
         })
 
@@ -1136,7 +1206,7 @@ Function Show-MainGUI {
         $DisjoinEntraIDButton.Add_Click({ Disjoin-EntraID })
         $JoinIntunePersonalButton.Add_Click({ Join-IntuneAsPersonalDevice })
 
-        # Show the GUI
+        # 4) Show the GUI
         [void]$Window.ShowDialog()
     }
     catch {
