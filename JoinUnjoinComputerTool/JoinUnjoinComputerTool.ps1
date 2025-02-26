@@ -54,6 +54,7 @@
     Author  : Mohammad Abdulkader Omar
     Website : https://momar.tech
     Date    : 2025-01-20
+    Version : 2.0
 #>
 
 ###############################################################################
