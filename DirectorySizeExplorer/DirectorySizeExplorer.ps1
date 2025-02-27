@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Directory Size Explorer GUI Tool (Fully Recursive, Asynchronous Incremental Scanning)
 
