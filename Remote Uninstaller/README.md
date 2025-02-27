@@ -1,5 +1,9 @@
 
-# 🔥 Remote EXE/MSI Uninstaller (WPF GUI)
+# 🔥 Remote EXE/MSI Uninstaller
+![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)
+![Windows](https://img.shields.io/badge/OS-Windows-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
 
 A **PowerShell-based GUI tool** that allows administrators to **remotely uninstall EXE and MSI applications** from Windows machines. The tool ensures complete cleanup by **removing registry entries, stopping processes, deleting leftover files/folders**, and **cleaning up Start Menu shortcuts and AppData**.
 
