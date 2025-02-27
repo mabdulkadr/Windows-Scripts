@@ -50,7 +50,6 @@
 
 ## Screenshots
 
-### 🔹 Main UI
 ![Screenshot](Screenshot.png)
 
 ---
