@@ -12,6 +12,10 @@
 
 This tool is useful for **system administrators, IT professionals, and end-users** who need **real-time file size analysis, folder organization insights, and storage management**.
 
+## Screenshots
+
+![Screenshot](Screenshot.png)
+
 ## ✨ Features
 
 ✅ **Recursive Folder Size Calculation** – Accurately computes the **total size** of each folder, including subdirectories.  
