@@ -1,122 +1,114 @@
 
-# Devices Inactive Cleanup Tool (WPF GUI)
+# Devices Inactive Cleanup Tool
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.0-green.svg)
 
 ## Overview
-**Devices Inactive Cleanup Tool** is a **WPF-based PowerShell GUI tool** designed for **Active Directory administrators** to efficiently **identify, manage, and clean up inactive computers** in AD.  
+The **Devices Inactive Cleanup Tool** is a **WPF-based PowerShell script** designed to search for and manage **inactive computers** in **Active Directory**. It provides an intuitive GUI to:
+- **Search for inactive computers** based on a specified number of inactive days.
+- **Disable or delete selected computers** in Active Directory.
+- **Export inactive computer details** to a CSV report.
 
-This tool enables admins to:
-- **Search** for computers that have been inactive for a specified number of days.
-- **Export results** to a **CSV file** (with `ComputerName`, `LastLogonDate`, `InactiveDays`, `DistinguishedName`).
-- **Disable selected computers** in bulk.
-- **Delete selected computers** from AD.
-- **Run asynchronously** using background jobs to keep the GUI responsive.
+This script ensures a seamless experience by using **background jobs** to prevent UI freezing while querying Active Directory.
+
+---
 
 ## Features
-✅ **Graphical User Interface (GUI)** – Built with WPF for ease of use.  
-✅ **Find inactive devices** by specifying inactivity days and an Organizational Unit (OU).  
-✅ **Bulk Actions** – Disable or delete multiple devices at once.  
-✅ **CSV Export** – Saves selected fields (`ComputerName`, `LastLogonDate`, `InactiveDays`, `DistinguishedName`).  
-✅ **Runs in Background** – Uses PowerShell jobs to avoid UI freezing.  
-✅ **Error Handling** – Displays warnings if a connection or query fails.  
+✅ **Graphical User Interface (GUI) using WPF**  
+✅ **Search computers by inactivity days & Organizational Unit (OU)**  
+✅ **Background job support** (non-blocking UI)  
+✅ **DataGrid display with filtering & selection**  
+✅ **Enable, disable, or delete inactive computers**  
+✅ **Generate CSV reports of inactive devices**  
+✅ **Custom WPF message dialogs for confirmations**  
+✅ **Progress bar for AD query status**  
 
 ---
 
 ## Prerequisites
-Before running this script, ensure:
-- **PowerShell 5.1+** is installed.
-- **RSAT (Remote Server Administration Tools) – Active Directory Module** is installed.
-- The **user has necessary permissions** to manage AD computers.
-- The **PC has network access** to the Domain Controller (DC).
-
-📌 **To check if RSAT is installed, run:**
-```powershell
-Get-Module -ListAvailable ActiveDirectory
-```
-📌 **If missing, install RSAT (for Windows 10/11):**
-```powershell
-Add-WindowsFeature -Name "RSAT-AD-PowerShell"
-```
-
----
-
-## Installation
-1. **Download the script** from [GitHub](https://github.com/mabdulkadr/DevicesInactiveCleanup).
-2. **Run PowerShell as Administrator**.
-3. **Ensure execution policy allows scripts**:
+Before running this script, ensure you have:
+1. **PowerShell 5.1 or later**
+2. **Active Directory PowerShell module**  
+   Install it (if not installed) using:
    ```powershell
-   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   Add-WindowsFeature -Name RSAT-AD-PowerShell
    ```
-4. **Execute the script**:
-   ```powershell
-   .\DevicesInactiveCleanup.ps1
-   ```
+3. **Active Directory Domain Admin Privileges**
+4. **.NET Framework 4.5+ installed** (required for WPF)
 
 ---
 
-## How to Use
-### **1️⃣ Search for Inactive Computers**
-- Enter the **number of days inactive**.
-- Specify the **Active Directory OU** (or use the default).
-- Click **"Search"** to begin.
+## How to Run
+### **Option 1: Run Directly**
+Simply execute the script in PowerShell:
+```powershell
+.\DevicesUsersInactiveCleanupTool.ps1
+```
 
-### **2️⃣ Perform Actions**
-- **Disable**: Select computers and click **"Disable Selected"**.
-- **Delete**: Select computers and click **"Delete Selected"**.
-
-### **3️⃣ Export Results to CSV**
-- Click **"Generate CSV Report"**.
-- Select a location to save the file.
-
-### **4️⃣ Exit the Tool**
-- Click **"Exit"** to close the application.
+### **Option 2: Run with Custom Parameters**
+You can override the default values for inactivity days and the Organizational Unit (OU) by specifying parameters:
+```powershell
+.\DevicesUsersInactiveCleanupTool.ps1 -DaysInactive 120 -SearchOU "OU=IT,DC=company,DC=local"
+```
+- **`-DaysInactive`** → Number of days since the last logon to be considered inactive.
+- **`-SearchOU`** → The specific OU to search for inactive computers.
 
 ---
 
-## Troubleshooting
-### ❌ **Error: "The operation returned because the timeout limit was exceeded."**
-✅ **Cause:** Your PC cannot connect to the domain controller (DC).  
-**Fix:**  
-- Ensure your PC is on the **same network** as the DC.
-- Test AD connectivity:
-  ```powershell
-  Test-NetConnection -ComputerName "YourDC.domain.local" -Port 389
-  ```
-- Manually set your **DNS server** to point to the **DC's IP**:
-  ```powershell
-  Set-DnsClientServerAddress -InterfaceIndex 2 -ServerAddresses ("192.168.1.10")
-  ```
----
+## User Guide
+### 1️⃣ **Searching for Inactive Computers**
+- Enter the **number of days** since the last logon (default: **180**).
+- Specify an **Organizational Unit (OU)** (default: **OU=Computers,DC=company,DC=local**).
+- Click **"Search"** to query Active Directory.
+- Results appear in the **DataGrid** with columns:
+  - ✅ **Computer Name**
+  - 📅 **Last Logon Date**
+  - ⏳ **Inactive Days**
+  - 🏷 **Distinguished Name (DN)**
 
-### ❌ **Error: "WARNING: Error initializing default drive"**
-✅ **Cause:** The Active Directory module is missing or not loading correctly.  
-**Fix:**
-- Check if the module is installed:
-  ```powershell
-  Get-Module -ListAvailable ActiveDirectory
-  ```
-- Install RSAT (for Windows 10/11):
-  ```powershell
-  Get-WindowsCapability -Name RSAT* -Online | Where-Object Name -like "RSAT:ActiveDirectory*" | Add-WindowsCapability -Online
-  ```
+### 2️⃣ **Disabling Computers**
+- Select one or more inactive computers from the **DataGrid**.
+- Click **"Disable Selected"**.
+- A confirmation prompt will appear.
+- If confirmed, the script will disable the selected computers in **Active Directory**.
 
----
+### 3️⃣ **Deleting Computers**
+- Select one or more inactive computers from the **DataGrid**.
+- Click **"Delete Selected"**.
+- A confirmation prompt will appear.
+- If confirmed, the script will **permanently remove** the selected computers from **Active Directory**.
 
-## Notes
-- Ensure you have **domain admin** or equivalent permissions.
-- Always **test changes** before applying them in production.
-- If running from a **non-DC machine**, verify **network connectivity** and **RSAT installation**.
+### 4️⃣ **Generating a CSV Report**
+- Click **"Generate CSV Report"** to export **inactive computer details**.
+- The script will prompt you for a **save location**.
+- The report includes:
+  - **Computer Name**
+  - **Last Logon Date**
+  - **Inactive Days**
+  - **Distinguished Name (DN)**
 
 ---
 
-## License 
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+## Screenshots
+![Devices Inactive Cleanup Tool](https://via.placeholder.com/750x400?text=Screenshot+Placeholder)
 
 ---
 
-**Disclaimer**: This script is provided **as-is**. Test in a **staging environment** before deploying in production. The author is **not responsible** for any unintended consequences.
+## Error Handling
+The script includes error handling to:
+- **Validate input values** for inactivity days.
+- **Check if Active Directory module is available** before running queries.
+- **Display proper error messages** when encountering AD-related issues.
 
+---
 
+## License
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Disclaimer
+⚠ **Use this script at your own risk!**  
+Always test in a **non-production environment** before applying changes to **Active Directory**.
