@@ -98,11 +98,6 @@ You can override the default values for inactivity days and the Organizational U
 
 ---
 
-## Screenshots
-![Devices Inactive Cleanup Tool](https://via.placeholder.com/750x400?text=Screenshot+Placeholder)
-
----
-
 ## Error Handling
 The script includes error handling to:
 - **Validate input values** for inactivity days.
