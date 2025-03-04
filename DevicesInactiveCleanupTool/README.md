@@ -15,6 +15,11 @@ This script ensures a seamless experience by using **background jobs** to preven
 
 ---
 
+## Screenshots
+![Devices Inactive Cleanup Tool](https://via.placeholder.com/750x400?text=Screenshot+Placeholder)
+
+---
+
 ## Features
 ✅ **Graphical User Interface (GUI) using WPF**  
 ✅ **Search computers by inactivity days & Organizational Unit (OU)**  
