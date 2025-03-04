@@ -17,6 +17,12 @@
 
 ---
 
+## Screenshots
+
+![Screenshot](Screenshot.png)
+
+---
+
 ## Features
 
 ### ✅ Active Directory Management
@@ -46,11 +52,6 @@
 - **Confirmation Dialogs** for critical operations.
 - **Logging & Error Handling** for troubleshooting.
 
----
-
-## Screenshots
-
-![Screenshot](Screenshot.png)
 
 ---
 
