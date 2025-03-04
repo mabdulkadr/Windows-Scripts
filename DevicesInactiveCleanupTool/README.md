@@ -16,7 +16,9 @@ This script ensures a seamless experience by using **background jobs** to preven
 ---
 
 ## Screenshots
-![Devices Inactive Cleanup Tool](https://via.placeholder.com/750x400?text=Screenshot+Placeholder)
+
+![Screenshot](Screenshot.png)
+
 
 ---
 
