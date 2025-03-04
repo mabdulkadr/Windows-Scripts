@@ -5,7 +5,7 @@
 .DESCRIPTION
     This script creates a WPF-based GUI to search for and manage inactive computers in Active Directory.
     It allows you to specify how many days a computer should be considered inactive, then displays
-    all matching computers in a DataGrid. Each computerâ€™s name, last logon date, inactivity duration,
+    all matching computers in a DataGrid. Each computer’s name, last logon date, inactivity duration,
     and distinguished name are shown.
 
     The script uses a background job to avoid freezing the GUI while searching AD, and periodically checks
@@ -25,18 +25,184 @@
     Date    : 2025-02-26
 #>
 
-# Check if the ActiveDirectory module is installed
-if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {
-    Write-Error "ActiveDirectory module is not installed. Please install the RSAT tools or the module and try again."
-    exit
+#------------------------------------------------------------------------------
+# Custom WPF Message Functions
+#------------------------------------------------------------------------------
+
+Function Show-WPFMessage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Title = "Message",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Green","Orange","Red","Blue")]
+        [string]$Color = "Red"
+    )
+
+    Add-Type -AssemblyName PresentationFramework
+
+    switch ($Color) {
+        "Green"  { $HeaderColor = "#28A745" }
+        "Orange" { $HeaderColor = "#FFA500" }
+        "Red"    { $HeaderColor = "#DC3545" }
+        "Blue"   { $HeaderColor = "#0078D7" }
+    }
+
+    $xamlString = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height"
+        Width="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Section -->
+        <Border Grid.Row="0" Background="$HeaderColor"  Padding="10">
+            <TextBlock Text="$Title"
+                       Foreground="White"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Message Section -->
+        <TextBlock Grid.Row="1"
+                   x:Name="txtMessage"
+                   TextWrapping="Wrap"
+                   Margin="20"
+                   FontSize="14"
+                   Foreground="#333333"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+        
+        <!-- Button Section -->
+        <Button Grid.Row="2"
+                x:Name="btnOK"
+                Content="OK"
+                Width="80"
+                Height="30"
+                Margin="10"
+                HorizontalAlignment="Center"
+                Background="$HeaderColor"
+                Foreground="White"
+                FontWeight="Bold"
+                BorderThickness="0"
+                Cursor="Hand"/>
+    </Grid>
+</Window>
+"@
+
+    try {
+        $xamlXml = [xml]$xamlString
+        $reader = New-Object System.Xml.XmlNodeReader($xamlXml)
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
+        $txtMessage = $window.FindName("txtMessage")
+        $txtMessage.Text = $Message
+
+        $btnOK = $window.FindName("btnOK")
+        $btnOK.Add_Click({ $window.Close() })
+
+        [void]$window.ShowDialog()
+    }
+    catch {
+        Write-Error "Failed to show message: $($_.Exception.Message)"
+    }
 }
 
-# Load .NET PresentationFramework (WPF) for the GUI
+Function Show-WPFConfirmation {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Title = "Confirmation",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Green", "Orange", "Red", "Blue")]
+        [string]$Color = "Blue"
+    )
+
+    Add-Type -AssemblyName PresentationFramework
+
+    switch ($Color) {
+        "Green"  { $HeaderColor = "#28A745" }
+        "Orange" { $HeaderColor = "#FFA500" }
+        "Red"    { $HeaderColor = "#DC3545" }
+        "Blue"   { $HeaderColor = "#0078D7" }
+    }
+
+    $xamlString = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="WidthAndHeight">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <!-- Header Section -->
+      <Border Grid.Row="0" Background="$HeaderColor" Padding="10">
+        <TextBlock Text="$Title" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+      </Border>
+
+      <!-- Message Section -->
+      <TextBlock Grid.Row="1" x:Name="txtMessage" TextWrapping="Wrap" Margin="20" FontSize="14" Foreground="#333333" HorizontalAlignment="Center" VerticalAlignment="Center" Text="$Message"/>
+
+      <!-- Button Section -->
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,10">
+        <Button x:Name="btnYes" Content="Yes" Width="80" Height="30" Margin="10" Background="$HeaderColor" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+        <Button x:Name="btnNo" Content="No" Width="80" Height="30" Margin="10" Background="$HeaderColor" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+      </StackPanel>
+    </Grid>
+</Window>
+"@
+
+    try {
+        $xamlXml = [xml]$xamlString
+        $reader = New-Object System.Xml.XmlNodeReader($xamlXml)
+        $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
+        $btnYes = $window.FindName("btnYes")
+        $btnNo  = $window.FindName("btnNo")
+
+        $btnYes.Add_Click({
+            $window.DialogResult = $true
+            $window.Close()
+        })
+        $btnNo.Add_Click({
+            $window.DialogResult = $false
+            $window.Close()
+        })
+
+        [void]$window.ShowDialog()
+        return $window.DialogResult
+    }
+    catch {
+        Write-Error "Failed to show confirmation: $($_.Exception.Message)"
+    }
+}
+
+#------------------------------------------------------------------------------
+# Load the WPF GUI
+#------------------------------------------------------------------------------
 Add-Type -AssemblyName PresentationFramework
 
-###############################################################################
-# Define the XAML for the GUI layout
-###############################################################################
 [xml]$XAML = @"
 <Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
         xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
@@ -88,6 +254,7 @@ Add-Type -AssemblyName PresentationFramework
                                FontWeight="Bold" 
                                Margin="5" 
                                ToolTip="Enter the OU path in AD (e.g., OU=Computers,DC=Domain,DC=local)"/>
+                    <!-- Default value shown; we want the user to change it -->
                     <TextBox x:Name="OUBox" 
                              Width="300" 
                              Height="30" 
@@ -114,7 +281,6 @@ Add-Type -AssemblyName PresentationFramework
                           IsReadOnly="True"
                           SelectionMode="Extended"
                           Height="350">
-                    <!-- Highlight selected rows in blue -->
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
                             <Style.Triggers>
@@ -191,7 +357,7 @@ Add-Type -AssemblyName PresentationFramework
 
         <!-- Footer Section -->
         <Border Grid.Row='2' Background='#D3D3D3' Padding='5'>
-            <TextBlock Text='Â© 2025 M.omar (momar.tech) - All Rights Reserved'
+            <TextBlock Text='© 2025 M.omar (momar.tech) - All Rights Reserved'
                        Foreground='Black' 
                        FontSize='10' 
                        HorizontalAlignment='Center'/>
@@ -200,15 +366,10 @@ Add-Type -AssemblyName PresentationFramework
 </Window>
 "@
 
-###############################################################################
-# Parse the XAML to generate the WPF Window object
-###############################################################################
 $reader = New-Object System.Xml.XmlNodeReader($XAML)
 $Window = [Windows.Markup.XamlReader]::Load($reader)
 
-###############################################################################
-# Retrieve the named UI elements
-###############################################################################
+# Retrieve the named UI elements.
 $DaysInactiveBox      = $Window.FindName("DaysInactiveBox")
 $OUBox                = $Window.FindName("OUBox")
 $SearchButton         = $Window.FindName("SearchButton")
@@ -220,22 +381,52 @@ $GenerateReportButton = $Window.FindName("GenerateReportButton")
 $DisableButton        = $Window.FindName("DisableButton")
 $DeleteButton         = $Window.FindName("DeleteButton")
 
-###############################################################################
-# Global Variables for the Background Job and Timer
-###############################################################################
-$Global:ScanJob           = $null
-$Global:ScanTimer         = $null
-$Global:InactiveComputers = New-Object System.Collections.ObjectModel.ObservableCollection[PSObject]
-
-###############################################################################
+#------------------------------------------------------------------------------
 # FUNCTION: Search-InactiveComputers
-#   - Validates input
-#   - Spawns a background job to query AD
-#   - Updates the UI with results once the job completes
-###############################################################################
+#   - Checks if ActiveDirectory module is installed.
+#   - Checks if the Search OU value is valid (i.e. not left as default).
+#   - Validates Days Inactive and spawns a background job to query AD.
+#------------------------------------------------------------------------------
 function Search-InactiveComputers {
 
-    # Ensure DaysInactiveBox is a valid integer
+    # Check if the ActiveDirectory module is installed.
+    if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {
+        $userChoice = Show-WPFConfirmation -Message "ActiveDirectory module is not installed on this system.`nWould you like to attempt to install it now?" -Title "Module Missing" -Color "Orange"
+        if ($userChoice -eq $true) {
+            try {
+                if (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue) {
+                    Show-WPFMessage -Message "Detected Install-WindowsFeature command.`nInstalling RSAT-AD-PowerShell..." -Title "Installation" -Color "Blue"
+                    Install-WindowsFeature RSAT-AD-PowerShell -IncludeAllSubFeature -ErrorAction Stop
+                }
+                elseif (Get-Command Add-WindowsCapability -ErrorAction SilentlyContinue) {
+                    Show-WPFMessage -Message "Detected Add-WindowsCapability command.`nInstalling RSAT ActiveDirectory DS-LDS Tools..." -Title "Installation" -Color "Blue"
+                    Add-WindowsCapability -Online -Name "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0" -ErrorAction Stop
+                }
+                else {
+                    Show-WPFMessage -Message "No automated installation method available.`nPlease install the RSAT tools manually or run the script from a Domain Controller." -Title "Installation Error" -Color "Red"
+                    return
+                }
+                Show-WPFMessage -Message "ActiveDirectory module installed successfully.`nPlease restart the script to continue." -Title "Installation Success" -Color "Green"
+                return
+            }
+            catch {
+                Show-WPFMessage -Message "Installation failed: $($_.Exception.Message)" -Title "Installation Error" -Color "Red"
+                return
+            }
+        }
+        else {
+            Show-WPFMessage -Message "ActiveDirectory module is required to run this script.`nThe search will now be cancelled." -Title "Module Missing" -Color "Red"
+            return
+        }
+    }
+
+    # Check if a valid Search OU is entered (i.e. not empty or the default placeholder).
+    if ([string]::IsNullOrWhiteSpace($OUBox.Text) -or $OUBox.Text -eq "OU=Computers,DC=company,DC=local") {
+        Show-WPFMessage -Message "Please enter a valid Search OU instead of the default value." -Title "Invalid OU" -Color "Red"
+        return
+    }
+
+    # Validate that 'Days Inactive' is a valid integer.
     if (-not [int]::TryParse($DaysInactiveBox.Text, [ref]$null)) {
         $StatusLabel.Text = "Invalid 'Days Inactive' value. Please enter a valid number."
         return
@@ -243,38 +434,24 @@ function Search-InactiveComputers {
 
     $DaysInactive  = [int]$DaysInactiveBox.Text
     $SearchBaseOU  = $OUBox.Text
-    $InactiveCutoff = (Get-Date).AddDays(-$DaysInactive)  # date minus X days
+    $InactiveCutoff = (Get-Date).AddDays(-$DaysInactive)
 
-    # Update UI to reflect ongoing work
+    # Update UI to indicate search progress.
     $ProgressBar.Visibility = "Visible"
     $ProgressBar.Value = 0
     $StatusLabel.Text = "Searching inactive computers..."
 
-    # Start a background job to prevent blocking the UI
+    # Spawn a background job to query Active Directory.
     $Global:ScanJob = Start-Job -ScriptBlock {
         param ($DaysInactive, $SearchBaseOU, $InactiveCutoff)
 
         Import-Module ActiveDirectory
         $Results = @()
-
         try {
-            # Query all computers in the specified OU
             $AllComputers = Get-ADComputer -Filter * -SearchBase $SearchBaseOU -Property Name, LastLogonDate, DistinguishedName
-
             foreach ($Computer in $AllComputers) {
-                $LastLogonDate = if ($Computer.LastLogonDate) { 
-                                    $Computer.LastLogonDate 
-                                 } else { 
-                                    "No Logon Information" 
-                                 }
-
-                $InactiveDays  = if ($LastLogonDate -eq "No Logon Information") {
-                                    "N/A"
-                                 } else {
-                                    (New-TimeSpan -Start $LastLogonDate -End (Get-Date)).Days
-                                 }
-
-                # If computer is missing logon info or it's older than cutoff
+                $LastLogonDate = if ($Computer.LastLogonDate) { $Computer.LastLogonDate } else { "No Logon Information" }
+                $InactiveDays  = if ($LastLogonDate -eq "No Logon Information") { "N/A" } else { (New-TimeSpan -Start $LastLogonDate -End (Get-Date)).Days }
                 if ($LastLogonDate -eq "No Logon Information" -or ([DateTime]$LastLogonDate -lt $InactiveCutoff)) {
                     $Results += [PSCustomObject]@{
                         ComputerName      = $Computer.Name
@@ -291,71 +468,49 @@ function Search-InactiveComputers {
         }
     } -ArgumentList $DaysInactive, $SearchBaseOU, $InactiveCutoff
 
-    # Use a DispatcherTimer to poll the background job state
+    # Use a DispatcherTimer to poll the background job status.
     $Global:ScanTimer = New-Object System.Windows.Threading.DispatcherTimer
     $Global:ScanTimer.Interval = [TimeSpan]::FromMilliseconds(500)
     $Global:ScanTimer.Add_Tick({
         if ($Global:ScanJob.State -eq "Completed") {
             $Global:ScanTimer.Stop()
-
-            # Retrieve the data from the completed job
             $Data = Receive-Job -Job $Global:ScanJob -Keep
             if ($Data -is [string] -and $Data.StartsWith("ERROR")) {
-                # Error case
                 $StatusLabel.Text = $Data
             }
             else {
-                # IMPORTANT: Ensure $Data is a collection; if single item, wrap it
-                if (-not ($Data -is [System.Collections.IEnumerable])) {
-                    $Data = @($Data) 
-                }
-
-                # Bind the results to the DataGrid
+                if (-not ($Data -is [System.Collections.IEnumerable])) { $Data = @($Data) }
                 $ComputerGrid.ItemsSource = $Data
                 $StatusLabel.Text = "Scan Completed. $($Data.Count) inactive computer(s) found."
             }
-            # Hide the progress bar after the job finishes
             $ProgressBar.Visibility = "Hidden"
         }
     })
     $Global:ScanTimer.Start()
 }
 
-###############################################################################
+#------------------------------------------------------------------------------
 # EVENT HANDLERS
-###############################################################################
+#------------------------------------------------------------------------------
 
-# 1) Search Button
-$SearchButton.Add_Click({
-    Search-InactiveComputers
-})
+# When Search button is clicked, run the enhanced search function.
+$SearchButton.Add_Click({ Search-InactiveComputers })
 
-# 2) Exit Button
-$ExitButton.Add_Click({
-    $Window.Close()
-})
+# Exit button: Closes the application.
+$ExitButton.Add_Click({ $Window.Close() })
 
-# 3) Generate CSV Report
-#    - Exports ONLY: ComputerName, LastLogonDate, InactiveDays, DistinguishedName
+# Generate CSV Report: Exports the grid data to a CSV file.
 $GenerateReportButton.Add_Click({
-    # Get current grid data
     $Data = $ComputerGrid.ItemsSource
-
-    # Ensure we have some data to export
     if ($Data -and $Data.Count -gt 0) {
-        # Prompt user for save location
         $dlg = New-Object Microsoft.Win32.SaveFileDialog
         $dlg.FileName   = "InactiveComputersReport"
         $dlg.DefaultExt = ".csv"
         $dlg.Filter     = "CSV files (*.csv)|*.csv"
-
         if ($dlg.ShowDialog() -eq $true) {
             $FileName = $dlg.FileName
-
-            # Select ONLY the 4 columns before exporting
             $ColumnsToExport = $Data | Select-Object ComputerName, LastLogonDate, InactiveDays, DistinguishedName
             $ColumnsToExport | Export-Csv -Path $FileName -NoTypeInformation
-
             $StatusLabel.Text = "CSV report generated successfully: $FileName"
         }
     }
@@ -364,23 +519,15 @@ $GenerateReportButton.Add_Click({
     }
 })
 
-# 4) Disable Selected Computers
+# Disable Selected Computers: Disables the selected AD computer accounts.
 $DisableButton.Add_Click({
     $selectedItems = $ComputerGrid.SelectedItems
     if ($selectedItems.Count -eq 0) {
         $StatusLabel.Text = "No computer selected to disable."
         return
     }
-
-    # Ask for confirmation
-    $confirm = [System.Windows.MessageBox]::Show(
-        "Are you sure you want to disable the selected computer(s)?",
-        "Confirm Disable",
-        [System.Windows.MessageBoxButton]::YesNo,
-        [System.Windows.MessageBoxImage]::Question
-    )
-
-    if ($confirm -eq [System.Windows.MessageBoxResult]::Yes) {
+    $confirm = Show-WPFConfirmation -Message "Are you sure you want to disable the selected computer(s)?" -Title "Confirm Disable" -Color "Blue"
+    if ($confirm -eq $true) {
         Import-Module ActiveDirectory
         foreach ($item in $selectedItems) {
             try {
@@ -394,23 +541,15 @@ $DisableButton.Add_Click({
     }
 })
 
-# 5) Delete Selected Computers
+# Delete Selected Computers: Deletes the selected AD computer accounts.
 $DeleteButton.Add_Click({
     $selectedItems = $ComputerGrid.SelectedItems
     if ($selectedItems.Count -eq 0) {
         $StatusLabel.Text = "No computer selected to delete."
         return
     }
-
-    # Confirm deletion
-    $confirm = [System.Windows.MessageBox]::Show(
-        "Are you sure you want to delete the selected computer(s)? This action cannot be undone.",
-        "Confirm Delete",
-        [System.Windows.MessageBoxButton]::YesNo,
-        [System.Windows.MessageBoxImage]::Warning
-    )
-
-    if ($confirm -eq [System.Windows.MessageBoxResult]::Yes) {
+    $confirm = Show-WPFConfirmation -Message "Are you sure you want to delete the selected computer(s)? This action cannot be undone." -Title "Confirm Delete" -Color "Red"
+    if ($confirm -eq $true) {
         Import-Module ActiveDirectory
         foreach ($item in $selectedItems) {
             try {
@@ -421,19 +560,15 @@ $DeleteButton.Add_Click({
                 $StatusLabel.Text = "Error deleting $($item.ComputerName): $_"
             }
         }
-
-        # Refresh the data grid by removing deleted items
         $updatedList = New-Object System.Collections.ObjectModel.ObservableCollection[PSObject]
         foreach ($comp in $ComputerGrid.ItemsSource) {
-            if ($selectedItems -notcontains $comp) {
-                $updatedList.Add($comp)
-            }
+            if ($selectedItems -notcontains $comp) { $updatedList.Add($comp) }
         }
         $ComputerGrid.ItemsSource = $updatedList
     }
 })
 
-###############################################################################
-# Finally, show the Window
-###############################################################################
+#------------------------------------------------------------------------------
+# Finally, show the Window.
+#------------------------------------------------------------------------------
 $Window.ShowDialog()
