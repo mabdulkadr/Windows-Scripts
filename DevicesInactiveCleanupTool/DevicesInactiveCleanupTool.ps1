@@ -5,7 +5,7 @@
 .DESCRIPTION
     This script creates a WPF-based GUI to search for and manage inactive computers in Active Directory.
     It allows you to specify how many days a computer should be considered inactive, then displays
-    all matching computers in a DataGrid. Each computer’s name, last logon date, inactivity duration,
+    all matching computers in a DataGrid. Each computerâ€™s name, last logon date, inactivity duration,
     and distinguished name are shown.
 
     The script uses a background job to avoid freezing the GUI while searching AD, and periodically checks
@@ -24,6 +24,12 @@
     Website : https://momar.tech
     Date    : 2025-02-26
 #>
+
+# Check if the ActiveDirectory module is installed
+if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {
+    Write-Error "ActiveDirectory module is not installed. Please install the RSAT tools or the module and try again."
+    exit
+}
 
 # Load .NET PresentationFramework (WPF) for the GUI
 Add-Type -AssemblyName PresentationFramework
@@ -185,7 +191,7 @@ Add-Type -AssemblyName PresentationFramework
 
         <!-- Footer Section -->
         <Border Grid.Row='2' Background='#D3D3D3' Padding='5'>
-            <TextBlock Text='© 2025 M.omar (momar.tech) - All Rights Reserved'
+            <TextBlock Text='Â© 2025 M.omar (momar.tech) - All Rights Reserved'
                        Foreground='Black' 
                        FontSize='10' 
                        HorizontalAlignment='Center'/>
