@@ -96,29 +96,6 @@ This tool is useful for **system administrators, IT professionals, and end-users
 
 ---
 
-## 🚀 Advanced Features & Customization
-
-### 🎨 Customize Header/Footer:
-Modify the XAML layout to **change branding elements**:
-
-- **Modify the Header Text & Color:**
-  ```xml
-  <Border Grid.Row="0" Background="#0078D7" Padding="15">
-      <TextBlock Text="Your Custom Header"
-                 Foreground="White"
-                 FontSize="24"
-                 FontWeight="Bold"/>
-  </Border>
-  ```
-- **Modify the Footer Text:**
-  ```xml
-  <Border Grid.Row="6" Background="#D3D3D3" Padding="5">
-      <TextBlock Text="© 2025 YourCompany - All Rights Reserved"
-                 Foreground="Black" 
-                 FontSize="10" />
-  </Border>
-  ```
-
 ### 🚀 Performance Optimization
 - **Recursive folder scanning** can be slow for large directories. To **improve speed**, consider:
   - **Using Parallel Processing:** Implement `Start-Job` to scan multiple folders simultaneously.
