@@ -35,14 +35,6 @@ This tool is useful for **system administrators, IT professionals, and end-users
    - **Header:** Blue banner with `"Directory Size Explorer"` title.  
    - **Footer:** `"© 2025 M.omar (momar.tech) - All Rights Reserved"` displayed at the bottom.  
 
-## 🖥️ GUI Preview
-
-### Light Mode
-![GUI Preview - Light Mode](https://user-images.githubusercontent.com/placeholder/light-mode.png)
-
-### Dark Mode
-![GUI Preview - Dark Mode](https://user-images.githubusercontent.com/placeholder/dark-mode.png)
-
 ---
 
 ## ⚙️ Installation & Requirements
