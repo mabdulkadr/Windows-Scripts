@@ -5,7 +5,7 @@
 .DESCRIPTION
     This script creates a WPF-based GUI to search for and manage inactive computers in Active Directory.
     It allows you to specify how many days a computer should be considered inactive, then displays
-    all matching computers in a DataGrid. Each computer’s name, last logon date, inactivity duration,
+    all matching computers in a DataGrid. Each computerâ€™s name, last logon date, inactivity duration,
     and distinguished name are shown.
 
     The script uses a background job to avoid freezing the GUI while searching AD, and periodically checks
@@ -253,13 +253,11 @@ Add-Type -AssemblyName PresentationFramework
                                Height="30" 
                                FontWeight="Bold" 
                                Margin="5" 
-                               ToolTip="Enter the OU path in AD (e.g., OU=Computers,DC=Domain,DC=local)"/>
-                    <!-- Default value shown; we want the user to change it -->
-                    <TextBox x:Name="OUBox" 
-                             Width="300" 
-                             Height="30" 
-                             Text="OU=Computers,DC=company,DC=local" 
-                             Margin="5"/>
+                               ToolTip="Select an OU or leave blank for entire domain"/>
+                    <ComboBox x:Name="OUComboBox" 
+                              Width="100" 
+                              Height="30" 
+                              Margin="5"/>
 
                     <Button x:Name="SearchButton" 
                             Content="Search" 
@@ -315,49 +313,56 @@ Add-Type -AssemblyName PresentationFramework
                                TextAlignment="Center"/>
                 </StackPanel>
             </Border>
-
             <!-- Action Buttons -->
             <Border BorderBrush="#D3D3D3" BorderThickness="0.5" Padding="5" Margin="0,5,0,5">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
                     <Button x:Name="DisableButton" 
                             Content="Disable Selected" 
                             Width="150" 
                             Height="30" 
-                            Background="#FFA500" 
+                            Margin="5" 
+                            Background="#DC3545" 
                             Foreground="White" 
                             FontWeight="Bold" 
-                            Margin="5"/>
+                            BorderThickness="0" 
+                            Cursor="Hand"/>
                     <Button x:Name="DeleteButton" 
                             Content="Delete Selected" 
                             Width="150" 
                             Height="30" 
-                            Background="#FF6347" 
+                            Margin="5" 
+                            Background="#DC3545" 
                             Foreground="White" 
                             FontWeight="Bold" 
-                            Margin="5"/>
+                            BorderThickness="0" 
+                            Cursor="Hand"/>
                     <Button x:Name="GenerateReportButton" 
                             Content="Generate CSV Report" 
-                            Width="180" 
+                            Width="160" 
                             Height="30" 
+                            Margin="5" 
                             Background="#0078D7" 
                             Foreground="White" 
                             FontWeight="Bold" 
-                            Margin="5"/>
+                            BorderThickness="0" 
+                            Cursor="Hand"/>
                     <Button x:Name="ExitButton" 
                             Content="Exit" 
                             Width="100" 
                             Height="30" 
-                            Background="#808080" 
+                            Margin="5" 
+                            Background="#FFA500" 
                             Foreground="White" 
                             FontWeight="Bold" 
-                            Margin="5"/>
+                            BorderThickness="0" 
+                            Cursor="Hand"/>
                 </StackPanel>
             </Border>
         </StackPanel>
 
         <!-- Footer Section -->
         <Border Grid.Row='2' Background='#D3D3D3' Padding='5'>
-            <TextBlock Text='© 2025 M.omar (momar.tech) - All Rights Reserved'
+            <TextBlock Text='ï¿½ 2025 M.omar (momar.tech) - All Rights Reserved'
                        Foreground='Black' 
                        FontSize='10' 
                        HorizontalAlignment='Center'/>
@@ -371,7 +376,7 @@ $Window = [Windows.Markup.XamlReader]::Load($reader)
 
 # Retrieve the named UI elements.
 $DaysInactiveBox      = $Window.FindName("DaysInactiveBox")
-$OUBox                = $Window.FindName("OUBox")
+$OUComboBox           = $Window.FindName("OUComboBox")
 $SearchButton         = $Window.FindName("SearchButton")
 $ComputerGrid         = $Window.FindName("ComputerGrid")
 $ProgressBar          = $Window.FindName("ProgressBar")
@@ -380,6 +385,75 @@ $ExitButton           = $Window.FindName("ExitButton")
 $GenerateReportButton = $Window.FindName("GenerateReportButton")
 $DisableButton        = $Window.FindName("DisableButton")
 $DeleteButton         = $Window.FindName("DeleteButton")
+
+#------------------------------------------------------------------------------
+# FUNCTION: Populate-OUComboBox
+#   - Populates the OU ComboBox with all OUs in the domain.
+#------------------------------------------------------------------------------
+function Populate-OUComboBox {
+    try {
+        Import-Module ActiveDirectory
+        $domainDN = (Get-ADDomain).DistinguishedName
+        $OUs = Get-ADObject -Filter "ObjectClass -eq 'organizationalUnit'" -SearchBase $domainDN -ResultPageSize 2000 | Select-Object -ExpandProperty DistinguishedName
+        $OUs = @("Entire Domain") + $OUs
+        # Manually sort the OU list alphabetically.
+        $SortedOUs = $OUs | Sort-Object
+
+        # Set ComboBox properties for usability and appearance.
+        $OUComboBox.IsEditable = $true
+        $OUComboBox.StaysOpenOnEdit = $true
+        $OUComboBox.IsTextSearchEnabled = $false
+        $OUComboBox.Width = 300
+        $OUComboBox.MinWidth = 200
+        $OUComboBox.MaxWidth = 400           # Set maximum width to 400.
+        $OUComboBox.MaxDropDownHeight = 300  # Controls dropdown height.
+
+        # Bind the sorted OU list to the ComboBox.
+        $OUComboBox.ItemsSource = $SortedOUs
+
+        # Limit each dropdown item to 400px width with horizontal scroll
+# Add after setting ItemsSource
+# Limit each dropdown item to 400px width with horizontal scroll
+$styleXaml = @"
+<Style xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" TargetType="ComboBoxItem">
+    <Setter Property="Width" Value="400"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="ToolTip" Value="{Binding DN}"/>
+</Style>
+"@
+
+$reader = New-Object System.Xml.XmlNodeReader([xml]$styleXaml)
+$style = [System.Windows.Markup.XamlReader]::Load($reader)
+$OUComboBox.ItemContainerStyle = $style
+
+
+
+
+        # Retrieve the editable TextBox part of the ComboBox for handling text change.
+        $editableTextBox = $OUComboBox.Template.FindName("PART_EditableTextBox", $OUComboBox)
+        if ($editableTextBox) {
+            $editableTextBox.Add_TextChanged({
+                $filterText = $OUComboBox.Text
+                if ([string]::IsNullOrWhiteSpace($filterText)) {
+                    $OUComboBox.ItemsSource = $SortedOUs
+                }
+                else {
+                    $FilteredOUs = $SortedOUs | Where-Object { $_ -like "*$filterText*" }
+                    $OUComboBox.ItemsSource = $FilteredOUs
+                }
+            })
+        }
+        $OUComboBox.SelectedIndex = 0
+    }
+    catch {
+        Show-WPFMessage -Message "Failed to retrieve OUs: $($_.Exception.Message)" -Title "Error" -Color "Red"
+        return
+    }
+}
+
+# Populate the OU ComboBox on script start
+Populate-OUComboBox
+
 
 #------------------------------------------------------------------------------
 # FUNCTION: Search-InactiveComputers
@@ -420,10 +494,12 @@ function Search-InactiveComputers {
         }
     }
 
-    # Check if a valid Search OU is entered (i.e. not empty or the default placeholder).
-    if ([string]::IsNullOrWhiteSpace($OUBox.Text) -or $OUBox.Text -eq "OU=Computers,DC=company,DC=local") {
-        Show-WPFMessage -Message "Please enter a valid Search OU instead of the default value." -Title "Invalid OU" -Color "Red"
-        return
+    # Check if a valid Search OU is selected.
+    if ($OUComboBox.SelectedItem -eq "Entire Domain") {
+        $SearchBaseOU = ""
+    }
+    else {
+        $SearchBaseOU = $OUComboBox.SelectedItem
     }
 
     # Validate that 'Days Inactive' is a valid integer.
@@ -433,7 +509,6 @@ function Search-InactiveComputers {
     }
 
     $DaysInactive  = [int]$DaysInactiveBox.Text
-    $SearchBaseOU  = $OUBox.Text
     $InactiveCutoff = (Get-Date).AddDays(-$DaysInactive)
 
     # Update UI to indicate search progress.
@@ -448,7 +523,11 @@ function Search-InactiveComputers {
         Import-Module ActiveDirectory
         $Results = @()
         try {
-            $AllComputers = Get-ADComputer -Filter * -SearchBase $SearchBaseOU -Property Name, LastLogonDate, DistinguishedName
+            $AllComputers = if ($SearchBaseOU) {
+                Get-ADComputer -Filter * -SearchBase $SearchBaseOU -Property Name, LastLogonDate, DistinguishedName
+            } else {
+                Get-ADComputer -Filter * -Property Name, LastLogonDate, DistinguishedName
+            }
             foreach ($Computer in $AllComputers) {
                 $LastLogonDate = if ($Computer.LastLogonDate) { $Computer.LastLogonDate } else { "No Logon Information" }
                 $InactiveDays  = if ($LastLogonDate -eq "No Logon Information") { "N/A" } else { (New-TimeSpan -Start $LastLogonDate -End (Get-Date)).Days }
