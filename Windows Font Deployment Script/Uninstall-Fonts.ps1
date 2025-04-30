@@ -19,7 +19,7 @@
 #>
 
 # Define the shared folder containing font references
-$FontDirectory = "\\winsrv01\d$\Deploy\Fonts"
+$FontDirectory = "\\Fonts"
 
 # Define output colors
 $Green = "Green"
