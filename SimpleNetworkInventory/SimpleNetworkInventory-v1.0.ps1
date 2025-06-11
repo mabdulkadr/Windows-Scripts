@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Simple Network Inventory Tool v1.0 – Modern WPF GUI for Parallel Network Device Discovery and Categorization.
 .DESCRIPTION
@@ -23,10 +23,10 @@
       - Classroom or training environments for demonstrating practical network discovery.
 
 .NOTES
-    Author        : Mohammad Abdulkader Omar
-    Website       : momar.tech
-    Version       : 1.0
-    Last Updated  : June 2025
+    Author     : Mohammad Abdulkader Omar
+    Website    : momar.tech
+    Version    : 1.0
+    Date       : 11-6-2025
 #>
 
 #region [1]--- Globals & Configuration ---
@@ -339,7 +339,9 @@ function Get-ArpTable {
 # ---- Load OUI map from oui.txt ----
 function Load-OuiMap {
     if (-not (Test-Path $global:OuiPath)) {
+        # Show status before download
         $status.Dispatcher.Invoke([action]{ $status.Text = "🌐 Downloading OUI vendor database..." })
+        [System.Windows.Forms.Application]::DoEvents()
         Write-Log "Downloading IEEE OUI vendor database..." "INFO"
         try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -348,10 +350,13 @@ function Load-OuiMap {
         } catch {
             Write-Log "Failed to download OUI database: $_" "ERROR"
             $status.Dispatcher.Invoke([action]{ $status.Text = "⚠️ OUI vendor DB download failed (MAC vendor lookup limited)." })
+            [System.Windows.Forms.Application]::DoEvents()
+            return
         }
     }
     if (Test-Path $global:OuiPath) {
         $status.Dispatcher.Invoke([action]{ $status.Text = "🔎 Parsing OUI vendor database..." })
+        [System.Windows.Forms.Application]::DoEvents()
         Write-Log "Parsing OUI vendor database..." "INFO"
         try {
             Get-Content $global:OuiPath | Where-Object { $_ -match '^([0-9A-F]{6})' } | ForEach-Object {
@@ -361,6 +366,7 @@ function Load-OuiMap {
         } catch {
             Write-Log "Failed to parse OUI database: $_" "ERROR"
             $status.Dispatcher.Invoke([action]{ $status.Text = "⚠️ OUI vendor DB parse error." })
+            [System.Windows.Forms.Application]::DoEvents()
         }
     }
 }
@@ -375,27 +381,6 @@ function Get-MacVendorOffline {
     } else {
         return "Unknown"
     }
-}
-
-# ---- Assign device category based on vendor/ports/OS ----
-function Get-DeviceCategory {
-    param (
-        [string]$Vendor,
-        [int[]]$OpenPorts,
-        [string]$PrinterHint,
-        [string]$OSHint
-    )
-    if ($PrinterHint -like "*Printer*") { return "Printer" }
-    if ($Vendor -like "*Fanvil*" -and $OpenPorts -contains 5060) { return "VoIP Phone" }
-    if ($Vendor -like "*Apple*") { return "Smartphone/Tablet" }
-    if ($Vendor -like "*Samsung*" -and $OpenPorts.Count -gt 0) { return "Smart TV/Android" }
-    if ($OpenPorts -contains 5060) { return "VoIP Phone" }
-    if ($OpenPorts -contains 554) { return "RTSP Camera" }
-    if ($OpenPorts -contains 9100) { return "Printer" }
-    if ($OpenPorts -contains 445 -or $OpenPorts -contains 139) { return "Windows PC" }
-    if ($OpenPorts -contains 22) { return "Linux Device" }
-    if ($OpenPorts.Count -eq 0) { return "Offline Device" }
-    return "Other Device"
 }
 
 #endregion
@@ -573,23 +558,104 @@ function Start-Scan {
                 }
             }
 
-            # Category (Vendor+Port logic)
+            # Category (Vendor+Port+OS logic)
             $category = "Other"
             try {
-                $category = & {
-                    if ($printerHint -like "*Printer*") { "Printer" }
-                    elseif ($vendor -like "*Fanvil*" -and $openPorts -contains 5060) { "VoIP Phone" }
-                    elseif ($vendor -like "*Apple*") { "Smartphone/Tablet" }
-                    elseif ($vendor -like "*Samsung*" -and $openPorts.Count -gt 0) { "Smart TV/Android" }
-                    elseif ($openPorts -contains 5060) { "VoIP Phone" }
-                    elseif ($openPorts -contains 554) { "RTSP Camera" }
-                    elseif ($openPorts -contains 9100) { "Printer" }
-                    elseif ($openPorts -contains 445 -or $openPorts -contains 139) { "Windows PC" }
-                    elseif ($openPorts -contains 22) { "Linux Device" }
-                    elseif ($openPorts.Count -eq 0) { "Offline Device" }
-                    else { "Other Device" }
-                }
-            } catch {}
+        $category = & {
+            # --- Printer detection ---
+            if ($printerHint -like "*Printer*" -or $openPorts -contains 9100 -or $vendor -match "HP|Canon|Epson|Brother|Lexmark|Xerox|Ricoh|Kyocera|OKI|Sharp|Toshiba|Samsung.*Printer") {
+                "Printer"
+            }
+            # --- Windows Server ---
+            elseif ($osName -like "*Windows Server*" -or $osHint -like "*Server*") {
+                "Windows Server"
+            }
+            # --- Network Devices: Switch/Router/Firewall ---
+            elseif ($vendor -match "Cisco|Juniper|Ubiquiti|Aruba|Netgear|Fortinet|MikroTik|TP-Link|D-Link|Zyxel|DrayTek|Huawei|Dell EMC|HPE|SonicWall|Palo Alto|Brocade|F5 Networks|Extreme Networks|Alcatel-Lucent|Allied Telesis|Edgecore|EnGenius|TRENDnet|Linksys|Cambium|Ruckus|Avaya|sophos") {
+                "Network Device"
+            }
+            # --- IP Phones ---
+            elseif ($vendor -match "Fanvil|Yealink|Grandstream|Polycom|Cisco|Avaya|Snom|Aastra|Siemens|Alcatel-Lucent|Mitel|Unify" -and $openPorts -contains 5060) {
+                "VoIP Phone"
+            }
+            elseif ($openPorts -contains 5060) {
+                "VoIP Phone"
+            }
+            # --- Cameras/Surveillance ---
+            elseif ($vendor -match "Hikvision|Dahua|Uniview|Axis Communications|Hanwha Techwin|Bosch Security|Mobotix|Vivotek|FLIR|Avigilon|Pelco|Lorex|Reolink|Wyze" -or $openPorts -contains 554 -or $openPorts -contains 8554) {
+                "IP Camera"
+            }
+            elseif ($openPorts -contains 554 -or $openPorts -contains 8554) {
+                "RTSP Camera"
+            }
+            elseif ($openPorts -contains 10001) {
+                "NVR/DVR"
+            }
+            # --- Storage/NAS ---
+            elseif ($vendor -match "QNAP|Synology|Western Digital|NetApp|Seagate|Buffalo|Drobo|Thecus|Asustor|LaCie|TerraMaster|Promise Technology|EMC|Hitachi|Dell EMC|LenovoEMC") {
+                "NAS Storage"
+            }
+            # --- Windows PC ---
+            elseif ($openPorts -contains 445 -or $openPorts -contains 139) {
+                if ($osName -like "*Windows Server*") { "Windows Server" } else { "Windows PC" }
+            }
+            elseif ($osHint -like "*Windows*" -and $osName -notlike "*Server*") {
+                "Windows PC"
+            }
+            # --- Linux/Unix Devices/SBC ---
+            elseif ($openPorts -contains 22 -and $osHint -match "Linux|Unix") {
+                "Linux Device"
+            }
+            elseif ($vendor -match "Raspberry Pi|Odroid|BeagleBone|Hardkernel|PINE64|Banana Pi|Orange Pi|NanoPi|LattePanda") {
+                "Linux SBC"
+            }
+            elseif ($openPorts -contains 22) {
+                "Linux Device"
+            }
+            # --- Consumer Electronics/Smartphones/Smart TVs/Tablets ---
+            elseif ($vendor -like "*Apple*" -or $vendor -match "iPhone|iPad|iPod") {
+                "Smartphone/Tablet"
+            }
+            elseif ($vendor -like "*Samsung*" -and $openPorts.Count -gt 0) {
+                "Smart TV/Android"
+            }
+            elseif ($vendor -match "LG Electronics|Sony|TCL|Hisense|Philips|Sharp|Panasonic|Vizio|Skyworth|Insignia|Element|JVC" -and $openPorts.Count -gt 0) {
+                "Smart TV/Screen"
+            }
+            elseif ($vendor -like "*Google*" -and $openPorts -contains 3000) {
+                "Chromecast"
+            }
+            elseif ($vendor -like "*Amazon*" -and $openPorts -contains 8080) {
+                "Amazon Echo/Fire Device"
+            }
+            # --- IoT and Home Automation ---
+            elseif ($openPorts -contains 1900) {
+                "UPnP Device"
+            }
+            elseif ($openPorts -contains 5353) {
+                "Bonjour Device"
+            }
+            elseif ($vendor -match "Espressif|Sonoff|Tuya|Shelly|Wyze|Tasmota|Espressif|Xiaomi|Aqara|TP-Link.*Kasa|TP-Link.*Tapo|Tuya|SmartThings|Home Assistant" -or $vendor -like "*SmartThings*") {
+                "IoT Device"
+            }
+            # --- More Camera/Screen types ---
+            elseif ($openPorts -contains 80 -and $openPorts -contains 443 -and $vendor -match "Hikvision|Dahua|Uniview|Axis") {
+                "IP Camera"
+            }
+            elseif ($vendor -like "*Raspberry Pi*") {
+                "IoT (Raspberry Pi)"
+            }
+            # --- Offline ---
+            elseif ($openPorts.Count -eq 0) {
+                "Offline Device"
+            }
+            # --- Fallback/Other ---
+            else {
+                "Other Device"
+            }
+        }
+        } catch {}
+
 
             $deviceInfo = [PSCustomObject]@{
                 Status             = "OK"
@@ -766,8 +832,8 @@ $xaml = @"
                      FontSize="14"
                      Background="#FFFFFF" Foreground="#111"
                      BorderBrush="#D7D9DE" BorderThickness="1"/>
-            <CheckBox x:Name="chkHideUnreachable" Content="Hide Unreachable IPs"
-                      Margin="0,0,18,0" Foreground="#333"
+            <CheckBox x:Name="chkHideUnreachable" Content="Hide Unreachable IP's"
+                      IsChecked="True" Margin="0,0,18,0" Foreground="#333"
                       FontWeight="SemiBold"/>
           </StackPanel>
         </Border>
