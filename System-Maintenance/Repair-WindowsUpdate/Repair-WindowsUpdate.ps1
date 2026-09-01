@@ -241,7 +241,7 @@ try {
             if ($lastHotfix) { Write-Host ("  Last HotFix: {0} on {1}" -f $lastHotfix.HotFixID, $lastHotfix.InstalledOn) -ForegroundColor Cyan }
             $lastWU = Get-WinEvent -LogName "System" -MaxEvents 50 -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -match "Windows Update|Microsoft-Windows-WindowsUpdateClient" } | Select-Object -First 1
             if ($lastWU) { Write-Host ("  Last WU Event: {0} ID {1} at {2}" -f $lastWU.ProviderName, $lastWU.Id, $lastWU.TimeCreated) -ForegroundColor Gray }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
         Write-Host "  -- WU Configuration (Registry) --" -ForegroundColor DarkGray
         $wuKeys = @(

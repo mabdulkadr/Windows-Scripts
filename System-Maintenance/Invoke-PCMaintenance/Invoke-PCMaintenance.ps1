@@ -236,7 +236,7 @@ try {
             $sfcLog = Get-Content -Path "$env:Windir\Logs\CBS\CBS.log" -ErrorAction SilentlyContinue | Select-Object -Last 5
             if ($sfcLog) { $sfcLog | ForEach-Object { Write-Host "    $_" -ForegroundColor Gray } }
             else { Write-Host "  CBS.log not found or empty" -ForegroundColor Gray }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
         Write-Host "  SFC ExitCode: $LASTEXITCODE (0=No violations, 3010=Reboot needed)" -ForegroundColor $(if ($LASTEXITCODE -eq 0) {'Green'} else {'Yellow'})
         Write-Host "  Next: Run Repair-WindowsImage.ps1 for deep DISM repair if SFC found corruption" -ForegroundColor Gray
 

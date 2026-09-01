@@ -231,7 +231,7 @@ function Export-ProfessionalHtmlReport {
                     $chartScripts += "<script>(function(){var data=[$donutData];var c=document.getElementById('$donutId');if(!c)return;var ctx=c.getContext('2d');var w=c.width,h=c.height;ctx.clearRect(0,0,w,h);var cx=w/2,cy=h/2,r=Math.min(w,h)/2-10;var total=0;for(var i=0;i<data.length;i++)total+=data[i].value;if(total<=0){ctx.fillStyle='#8d8d8d';ctx.font='14px IBM Plex Sans,Segoe UI,Arial';ctx.textAlign='center';ctx.fillText('No data',cx,cy);return}var start=-Math.PI/2;for(var j=0;j<data.length;j++){var slice=(data[j].value/total)*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+slice);ctx.closePath();ctx.fillStyle=data[j].color;ctx.fill();start+=slice}ctx.beginPath();ctx.arc(cx,cy,r*0.6,0,Math.PI*2);ctx.fillStyle='#262626';ctx.fill();ctx.fillStyle='#f4f4f4';ctx.font='600 28px IBM Plex Sans,Segoe UI,Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(total,cx,cy-6);ctx.font='12px IBM Plex Sans,Segoe UI,Arial';ctx.fillStyle='#c6c6c6';ctx.fillText('Total',cx,cy+18)})();</script>"
                 }
             }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
     }
     $headerSubtitle = if ($Subtitle) { $Subtitle } else { '' }
     $gradeBar = if ($gradeHtml) { "<div class=`"header-grade`">$gradeHtml</div>" } else { '' }
@@ -457,7 +457,7 @@ try {
             $compChkRows += [PSCustomObject]@{ Domain="LAPS"; Check="Configured"; Result=$compLaps2; Pass=$compLaps2 }
             $compUp = (Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue).LastBootUpTime
             $compChkRows += [PSCustomObject]@{ Domain="Uptime"; Check="Days"; Result=[math]::Round($compUp.TotalDays,1); Pass=($compUp.TotalDays -lt 30) }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
         if (-not $compChkRows -and $checks) { $compChkRows = $checks }
         $compPass2 = @($compChkRows | Where-Object { $_.Pass }).Count; $compScore2 = if($compChkRows.Count -gt 0){[math]::Round(($compPass2/$compChkRows.Count)*100,1)}else{0}
         $compGrade2 = if($compScore2 -ge 90){'A'}elseif($compScore2 -ge 80){'B'}elseif($compScore2 -ge 70){'C'}else{'F'}; $compGColor2 = if($compScore2 -ge 80){'#24a148'}elseif($compScore2 -ge 60){'#f1c21b'}else{'#da1e28'}

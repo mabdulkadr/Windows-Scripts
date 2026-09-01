@@ -224,7 +224,7 @@ try {
                     $uptime = (Get-Date) - $proc.StartTime
                     Write-Host ("  Uptime: {0:%m}m {0:%s}s (Started: {1})" -f $uptime, $proc.StartTime) -ForegroundColor Green
                 }
-            } catch {}
+            } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
         } else { Write-Host "  Spooler service not found" -ForegroundColor Red }
 
         Write-Host "  -- Spool Folder --" -ForegroundColor DarkGray

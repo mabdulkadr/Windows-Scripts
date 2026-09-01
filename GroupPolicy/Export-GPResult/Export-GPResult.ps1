@@ -258,7 +258,7 @@ try {
             else { Write-Host "  No recent GroupPolicy Operational events" -ForegroundColor Gray }
             $lastUpdate = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine' -Name LastPolicyTime -ErrorAction SilentlyContinue
             if ($lastUpdate) { Write-Host "  LastPolicyTime (Machine): $($lastUpdate.LastPolicyTime)" -ForegroundColor Cyan }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
         Write-Host "  -- Next Steps --" -ForegroundColor DarkGray
         Write-Host "  View HTML: Invoke-Item `"$($htmlFiles[0].FullName)`"  or start Reports\GPResult_*.html" -ForegroundColor Gray

@@ -229,7 +229,7 @@ try {
         # Flush and verify
         Write-Host "  -- Flushing via Clear-DnsClientCache + ipconfig /flushdns --" -ForegroundColor DarkGray
         try { Clear-DnsClientCache -ErrorAction Stop; Write-Host "  Clear-DnsClientCache: OK" -ForegroundColor Green } catch { Write-Host "  Clear-DnsClientCache: $($_.Exception.Message)" -ForegroundColor Yellow }
-        try { $flushOut = ipconfig /flushdns 2>&1 | Out-String; Write-Host "  ipconfig: $($flushOut.Trim())" -ForegroundColor Gray } catch {}
+        try { $flushOut = ipconfig /flushdns 2>&1 | Out-String; Write-Host "  ipconfig: $($flushOut.Trim())" -ForegroundColor Gray } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
         $after = Get-DnsClientCache -ErrorAction SilentlyContinue
         $afterCount = ($after | Measure-Object).Count
@@ -242,7 +242,7 @@ try {
         try {
             $test = Resolve-DnsName google.com -Type A -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($test) { Write-Host "  Resolve google.com: $($test.IPAddress) (OK)" -ForegroundColor Green } else { Write-Host "  Resolve google.com: FAIL" -ForegroundColor Yellow }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
     } catch {
         Write-Log -Message "Could not check DNS cache: $($_.Exception.Message)" -Level 'WARNING'

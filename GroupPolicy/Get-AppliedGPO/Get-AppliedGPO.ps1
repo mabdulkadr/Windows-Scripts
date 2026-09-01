@@ -245,7 +245,7 @@ try {
         try {
             $lastGP = Get-WinEvent -LogName "Microsoft-Windows-GroupPolicy/Operational" -MaxEvents 1 -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($lastGP) { Write-Host ("  Last GP Event: {0} (ID {1})" -f $lastGP.TimeCreated, $lastGP.Id) -ForegroundColor Gray }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
         $domain = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue).Domain
         $ou = try { (Get-ADComputer -Identity $env:COMPUTERNAME -Properties DistinguishedName -ErrorAction SilentlyContinue).DistinguishedName } catch { "AD module not available" }
         Write-Host "  Domain: $domain" -ForegroundColor Cyan

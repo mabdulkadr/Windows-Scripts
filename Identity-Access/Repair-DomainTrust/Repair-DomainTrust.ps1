@@ -234,8 +234,8 @@ try {
         try {
             $w32time = w32tm /query /status 2>&1 | Select-Object -First 10 | Out-String
             Write-Host $w32time -ForegroundColor Gray
-            $timeDiff = try { (Get-Date) - (Get-Date).ToUniversalTime() } catch {}
-        } catch {}
+            $timeDiff = try { (Get-Date) - (Get-Date).ToUniversalTime() } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
         Write-Host "  -- Next Steps --" -ForegroundColor DarkGray
         Write-Host "  Verify: Test-ComputerSecureChannel -Verbose ; nltest /sc_query:$env:USERDNSDOMAIN" -ForegroundColor Gray
