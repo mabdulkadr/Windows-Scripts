@@ -248,7 +248,7 @@ try {
             if (Test-Path $ccmLogs) {
                 Get-ChildItem -Path $ccmLogs -Filter "PolicyAgent*.log" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object Name, LastWriteTime -First 3 | Format-Table -AutoSize | Out-String | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
             }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
     } catch {
         Write-Log -Message "Could not query SCCM actions: $($_.Exception.Message)" -Level 'WARNING'

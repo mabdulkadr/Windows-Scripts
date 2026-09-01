@@ -237,7 +237,7 @@ try {
         }
         $winSxs = Get-ChildItem -Path "C:\Windows\WinSxS" -ErrorAction SilentlyContinue | Measure-Object | Select-Object -ExpandProperty Count
         Write-Host "  WinSxS entries: $winSxs (component store)" -ForegroundColor Gray
-        try { $dismSize = (Get-ChildItem -Path "C:\Windows\Logs\DISM" -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum; Write-Host "  DISM logs: $([math]::Round($dismSize/1KB,1)) KB" -ForegroundColor Gray } catch {}
+        try { $dismSize = (Get-ChildItem -Path "C:\Windows\Logs\DISM" -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum; Write-Host "  DISM logs: $([math]::Round($dismSize/1KB,1)) KB" -ForegroundColor Gray } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
         Write-Host "  -- Repair Actions Taken --" -ForegroundColor DarkGray
         Write-Host "  Executed: DISM /Online /Cleanup-Image /RestoreHealth" -ForegroundColor Cyan

@@ -231,7 +231,7 @@ try {
             $winsock = netsh winsock show catalog 2>&1 | Select-Object -First 5 | Out-String
             Write-Host "  Winsock catalog (first 5):" -ForegroundColor Gray
             Write-Host $winsock -ForegroundColor Gray
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
         $tcpParams = Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($tcpParams) {
             Write-Host "  TCP Parameters:" -ForegroundColor Gray

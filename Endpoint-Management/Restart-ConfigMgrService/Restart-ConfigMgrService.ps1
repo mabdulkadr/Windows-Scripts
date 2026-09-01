@@ -234,7 +234,7 @@ try {
                     Write-Host ("  Uptime: {0:%d}d {0:%h}h {0:%m}m" -f $uptime) -ForegroundColor Green
                     Write-Host ("  Started: {0}" -f $proc.StartTime) -ForegroundColor Gray
                 }
-            } catch {}
+            } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
             # CCM logs
             $ccmLogs = "C:\Windows\CCM\Logs"

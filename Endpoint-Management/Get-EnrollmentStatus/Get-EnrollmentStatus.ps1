@@ -218,7 +218,7 @@ function Export-ProfessionalHtmlReport {
                     $chartScripts += "<script>(function(){var data=[$dData];var c=document.getElementById('$dId');if(!c)return;var x=c.getContext('2d');var w=c.width,h=c.height;x.clearRect(0,0,w,h);var cx=w/2,cy=h/2,r=Math.min(w,h)/2-10;var t=0;for(var i=0;i<data.length;i++)t+=data[i].value;if(t<=0){x.fillStyle='#8d8d8d';x.font='14px IBM Plex Sans,Segoe UI,Arial';x.textAlign='center';x.fillText('No data',cx,cy);return}var s=-Math.PI/2;for(var j=0;j<data.length;j++){var sl=(data[j].value/t)*Math.PI*2;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,s,s+sl);x.closePath();x.fillStyle=data[j].color;x.fill();s+=sl}x.beginPath();x.arc(cx,cy,r*0.6,0,Math.PI*2);x.fillStyle='#262626';x.fill();x.fillStyle='#f4f4f4';x.font='600 28px IBM Plex Sans,Segoe UI,Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(t,cx,cy-6);x.font='12px IBM Plex Sans,Segoe UI,Arial';x.fillStyle='#c6c6c6';x.fillText('Total',cx,cy+18)})();</script>"
                 }
             }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
     }
     $hdrSub = if ($Subtitle) { $Subtitle } else { '' }; $grBar = if ($gradeHtml) { "<div class=`"header-grade`">$gradeHtml</div>" } else { '' }
     $html = @"

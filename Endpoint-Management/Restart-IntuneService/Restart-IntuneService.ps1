@@ -224,7 +224,7 @@ try {
                     $uptime = (Get-Date) - $proc.StartTime
                     Write-Host ("  Uptime: {0:%d}d {0:%h}h {0:%m}m (Started: {1})" -f $uptime, $proc.StartTime) -ForegroundColor Green
                 }
-            } catch {}
+            } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
             $imeLogs = "C:\ProgramData\Microsoft\IntuneManagementExtension\Logs"
             if (Test-Path $imeLogs) {
                 Write-Host "  IME Logs (recent):" -ForegroundColor Gray

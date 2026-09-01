@@ -215,7 +215,7 @@ try {
 
         # Discover DCs
         $dcs = @()
-        try { $dcs = Get-ADDomainController -Filter * -ErrorAction SilentlyContinue | Select-Object HostName, Site, IsGlobalCatalog -First 5 } catch {}
+        try { $dcs = Get-ADDomainController -Filter * -ErrorAction SilentlyContinue | Select-Object HostName, Site, IsGlobalCatalog -First 5 } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
         if ($dcs) {
             Write-Host "  Discovered DCs:" -ForegroundColor Gray
             $dcs | Format-Table -AutoSize | Out-String | ForEach-Object { Write-Host $_ -ForegroundColor Cyan }

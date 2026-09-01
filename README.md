@@ -46,7 +46,6 @@ Windows-Scripts/
 │
 ├── README.md
 ├── LICENSE
-├── .gitignore
 │
 ├── System-Maintenance/            # 19 tools
 │   ├── Clear-PrintQueue/
@@ -151,10 +150,10 @@ Windows-Scripts/
 
 # Network
 .\Network\Clear-DnsCache\Clear-DnsCache.ps1
-.\Network\Resolve-DeviceIP\Resolve-DeviceIP.ps1 -DeviceName "PC-042"
+.\Network\Test-NetworkLatency\Test-NetworkLatency.ps1 -Target "8.8.8.8"
 
-# AD
-.\Identity-Access\Get-ADUserDetails\Get-ADUserDetails.ps1 -UserName "m.omar"
+# Identity
+.\Identity-Access\New-LocalUserBulk\New-LocalUserBulk.ps1 -CsvPath ".\users.csv" -WhatIf
 
 # Endpoint
 .\Endpoint-Management\Invoke-SCCMActions\Invoke-SCCMActions.ps1
@@ -198,7 +197,7 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 
 ## ⚠ Disclaimer
 
-This skill and every script it generates are provided as-is with no warranty of any kind. Test generated tools in a staging environment before deploying to production. The authors assume no liability for any damage or data loss resulting from their use.
+This toolkit and every script it contains are provided as-is with no warranty of any kind. Test generated tools in a staging environment before deploying to production. The authors assume no liability for any damage or data loss resulting from their use.
 
 ---
 <div align="center">

@@ -57,6 +57,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$scriptBase = if ($PSScriptRoot) { $PSScriptRoot } elseif ($PSCommandPath) { Split-Path -Parent $PSCommandPath } elseif ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -208,8 +210,8 @@ try {
     try {
         Write-Host "" -ForegroundColor Gray
         Write-Host "  -- Fonts Source (to install) --" -ForegroundColor DarkGray
-        $fontsDir = Join-Path $PSScriptRoot "Fonts"
-        if (-not (Test-Path $fontsDir)) { $fontsDir = $PSScriptRoot }
+        $fontsDir = Join-Path $scriptBase "Fonts"
+        if (-not (Test-Path $fontsDir)) { $fontsDir = $scriptBase }
         $fonts = Get-ChildItem -Path $fontsDir -Include "*.ttf","*.otf" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 10
         Write-Host "  Source: $fontsDir" -ForegroundColor Gray
         if ($fonts) {

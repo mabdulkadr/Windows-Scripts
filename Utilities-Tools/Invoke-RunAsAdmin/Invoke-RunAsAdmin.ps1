@@ -238,7 +238,7 @@ try {
             $integrity = whoami /groups 2>&1 | Select-String "Mandatory Label" | ForEach-Object { $_.Line.Trim() }
             if ($integrity) { Write-Host "  $integrity" -ForegroundColor Gray }
             else { Write-Host "  whoami /groups: no Mandatory Label found" -ForegroundColor Yellow }
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
 
         Write-Host "  -- RunAs Examples --" -ForegroundColor DarkGray
         Write-Host "  GUI: Right-click PowerShell -> Run as Administrator" -ForegroundColor Gray

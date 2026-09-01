@@ -218,8 +218,8 @@ try {
                 $ver = if ($p.Version) { $p.Version } elseif ($p.DisplayVersion) { $p.DisplayVersion } else { "unknown" }
                 $state = if ($p.InstallState) { $p.InstallState } elseif ($p.EnforcementState) { $p.EnforcementState } else { "unknown" }
                 $lastCheck = $null
-                try { $lastCheck = $p.LastCheckTime } catch {}
-                if (-not $lastCheck) { try { $lastCheck = $p.LastUpdateTime } catch {} }
+                try { $lastCheck = $p.LastCheckTime } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
+                if (-not $lastCheck) { try { $lastCheck = $p.LastUpdateTime } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' } }
                 [PSCustomObject]@{
                     AppId     = $k.PSChildName.Substring(0, [Math]::Min(8,$k.PSChildName.Length))
                     Name      = $appName

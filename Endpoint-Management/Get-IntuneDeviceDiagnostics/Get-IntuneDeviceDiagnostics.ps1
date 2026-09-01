@@ -226,7 +226,7 @@ try {
             $csv = Join-Path $reports "IntuneDiagnostics_$(Get-Date -Format yyyyMMdd_HHmmss).csv"
             [PSCustomObject]@{ Enrollments=$enrCount; IME=(if ($ime.Status) { $ime.Status } else { 'NotFound' }); Win32Apps=$apps; Time=$(Get-Date) } | Export-Csv -Path $csv -NoTypeInformation
             Write-Host "  CSV: $csv" -ForegroundColor Green
-        } catch {}
+        } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
     } catch {
         Write-Log -Message "Could not collect diagnostics: $($_.Exception.Message)" -Level 'WARNING'
     }

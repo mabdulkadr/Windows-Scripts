@@ -248,7 +248,7 @@ try {
             if ($rCount -gt 0) {
                 Write-Host "  Contents (first 5):" -ForegroundColor Gray
                 for ($i=0; $i -lt [Math]::Min(5,$rCount); $i++) {
-                    try { $it = $items.Item($i); Write-Host ("    {0} ({1})" -f $it.Name, $it.Size) -ForegroundColor Gray } catch {}
+                    try { $it = $items.Item($i); Write-Host ("    {0} ({1})" -f $it.Name, $it.Size) -ForegroundColor Gray } catch [System.Exception] { Write-Log -Message $_.Exception.Message -Level 'DEBUG' }
                 }
             }
         } catch { Write-Host "  Could not query Recycle Bin: $($_.Exception.Message)" -ForegroundColor Yellow }

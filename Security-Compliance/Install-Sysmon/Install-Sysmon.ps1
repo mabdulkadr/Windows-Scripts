@@ -57,6 +57,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$scriptBase = if ($PSScriptRoot) { $PSScriptRoot } elseif ($PSCommandPath) { Split-Path -Parent $PSCommandPath } elseif ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { (Get-Location).Path }
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -175,7 +177,7 @@ function Invoke-TargetAction {
         if (-not $PSCmdlet.ShouldProcess($Target, 'Install Sysmon')) {
             return [PSCustomObject]@{ Target = $Target; Success = $true; Skipped = $true }
         }
-        $cfg = Join-Path $PSScriptRoot 'Config\sysmonconfig.xml'; if (-not (Test-Path -LiteralPath $cfg)) { throw 'sysmonconfig.xml not found' }
+        $cfg = Join-Path $scriptBase 'Config\sysmonconfig.xml'; if (-not (Test-Path -LiteralPath $cfg)) { throw 'sysmonconfig.xml not found' }
         return [PSCustomObject]@{ Target = $Target; Success = $true; Skipped = $false }
     } catch {
         return [PSCustomObject]@{ Target = $Target; Success = $false; Skipped = $false; Error = $_.Exception.Message }
@@ -228,7 +230,7 @@ try {
         }
 
         Write-Host "  -- Sysmon Config (Config\sysmonconfig.xml) --" -ForegroundColor DarkGray
-        $cfg = Join-Path $PSScriptRoot "Config\sysmonconfig.xml"
+        $cfg = Join-Path $scriptBase "Config\sysmonconfig.xml"
         if (Test-Path $cfg) {
             $hash = (Get-FileHash -Path $cfg -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
             $sizeKB = [math]::Round((Get-Item $cfg).Length / 1KB,1)
@@ -254,7 +256,7 @@ try {
         }
 
         Write-Host "  -- Binaries --" -ForegroundColor DarkGray
-        $binaries = @("Config\Sysmon.exe","Config\Sysmon64.exe") | ForEach-Object { Join-Path $PSScriptRoot $_ }
+        $binaries = @("Config\Sysmon.exe","Config\Sysmon64.exe") | ForEach-Object { Join-Path $scriptBase $_ }
         foreach ($bin in $binaries) {
             if (Test-Path $bin) {
                 $ver = try { (Get-Item $bin).VersionInfo.FileVersion } catch { "unknown" }
