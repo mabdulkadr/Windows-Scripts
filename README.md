@@ -2,7 +2,7 @@
 
 # 🛠️ Windows-Scripts
 
-**Enterprise Windows Administration Toolkit — 90 Tools in 9 Categories**
+**Enterprise Windows Administration Toolkit — 70 Tools in 9 Categories**
 
 Modern PowerShell toolkit for Helpdesk & SysAdmins — System, Endpoint, GroupPolicy, Network, Identity, Reporting, Security, Deployment, Utilities.
 
@@ -11,7 +11,7 @@ Modern PowerShell toolkit for Helpdesk & SysAdmins — System, Endpoint, GroupPo
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0F172A?style=for-the-badge)](#%EF%B8%8F-requirements)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
-[![Scripts](https://img.shields.io/badge/Scripts-90-10B981?style=for-the-badge)](#-project-structure)
+[![Scripts](https://img.shields.io/badge/Scripts-70-10B981?style=for-the-badge)](#-project-structure)
 
 [Overview](#-overview) • [Features](#-core-features) • [Structure](#-project-structure) • [Usage](#-usage) • [Requirements](#%EF%B8%8F-requirements) • [License](#-license)
 
@@ -21,7 +21,7 @@ Modern PowerShell toolkit for Helpdesk & SysAdmins — System, Endpoint, GroupPo
 
 # 📖 Overview
 
-**Windows-Scripts** is a production-grade Windows administration toolkit with **90 PowerShell tools** organized into **9 categories** — each script lives in **its own folder with a dedicated README.md** for isolated documentation and deployment.
+**Windows-Scripts** is a production-grade Windows administration toolkit with **70 PowerShell tools** organized into **9 categories** — each script lives in **its own folder with a dedicated README.md** for isolated documentation and deployment.
 
 > **v2.1 Structure:** `Windows-Scripts/<Category>/<ScriptName>/<ScriptName>.ps1 + README.md` — no numeric prefixes, no spaces, per-script isolation.
 
@@ -31,8 +31,8 @@ Built for **Helpdesk, Endpoint Management, and IT Operations** managing Intune /
 
 # ✨ Core Features
 
-* **9 Categories** — System-Maintenance, Endpoint-Management, GroupPolicy, Network, Identity-Access, Reporting-Inventory, Security-Compliance, Software-Deployment, Utilities-Tools
-* **90 Isolated Tools** — each in `Category/ScriptName/` with `README.md`
+* **9 Categories** — System-Maintenance (19), Endpoint-Management (8), GroupPolicy (6), Network (8), Identity-Access (4), Reporting-Inventory (10), Security-Compliance (7), Software-Deployment (3), Utilities-Tools (5)
+* **70 Isolated Tools** — each in `Category/ScriptName/` with `README.md`
 * **Verb-Noun PascalCase** — no spaces, no typos, no double extensions
 * **CLI-First** — pure PowerShell 5.1, no GUI dependencies, STA not required
 * **Intune-Ready** — exit codes 0/1/2, SYSTEM context support
@@ -45,54 +45,95 @@ Built for **Helpdesk, Endpoint Management, and IT Operations** managing Intune /
 Windows-Scripts/
 │
 ├── README.md
+├── LICENSE
+├── .gitignore
 │
 ├── System-Maintenance/            # 19 tools
-│   ├── Repair-WindowsImage/
-│   │   ├── Repair-WindowsImage.ps1
-│   │   └── README.md
+│   ├── Clear-PrintQueue/
 │   ├── Clear-TempCache/
-│   │   ├── Clear-TempCache.ps1
-│   │   └── README.md
+│   ├── Disable-FastStartup/
+│   ├── Enable-FastStartup/
+│   ├── Enable-SystemRestore/
+│   ├── Get-USBDeviceHistory/
+│   ├── Invoke-PCMaintenance/
+│   ├── Invoke-SystemCleanup/
+│   ├── Invoke-WindowsUpdate/
 │   ├── Optimize-WindowsSettings/
-│   └── ... (13 more)
+│   ├── Remove-WindowsBloatware/
+│   ├── Repair-TimeService/
+│   ├── Repair-WindowsImage/
+│   ├── Repair-WindowsStore/
+│   ├── Repair-WindowsUpdate/
+│   ├── Reset-NetworkStack/
+│   ├── Reset-PrintSpooler/
+│   ├── Restart-Explorer/
+│   └── Watch-DiskSpace/
 │
-├── Endpoint-Management/            # 12 tools
-│   ├── Install-ConfigMgrClient/
+├── Endpoint-Management/            # 8 tools
+│   ├── Get-EnrollmentStatus/
+│   ├── Get-IntuneDeviceDiagnostics/
+│   ├── Invoke-IntuneReenrollment/
 │   ├── Invoke-SCCMActions/
-│   └── ... (8 more)
+│   ├── Invoke-Win32AppReinstall/
+│   ├── Repair-IntuneManagementExtension/
+│   ├── Restart-ConfigMgrService/
+│   └── Restart-IntuneService/
 │
-├── GroupPolicy/                    # 7 tools
-│   ├── Invoke-GPUpdate/
+├── GroupPolicy/                    # 6 tools
 │   ├── Backup-LocalGPO/
-│   └── ... (5 more)
+│   ├── Export-GPResult/
+│   ├── Get-AppliedGPO/
+│   ├── Invoke-RegistryPolicyAudit/
+│   ├── Reset-LocalGPO/
+│   └── Restore-LocalGPO/
 │
-├── Network/                        # 11 tools
+├── Network/                        # 8 tools
 │   ├── Clear-DnsCache/
-│   ├── Resolve-DeviceIP/
-│   └── ... (7 more)
+│   ├── Disable-IPv6/
+│   ├── Disable-WindowsFirewall/
+│   ├── Get-OpenPorts/
+│   ├── Get-TLSConfiguration/
+│   ├── Reset-WindowsFirewall/
+│   ├── Reset-Winsock/
+│   └── Test-NetworkLatency/
 │
-├── Identity-Access/                # 9 tools
-│   ├── Join-Domain/
-│   ├── Get-ADUserDetails/
-│   └── ... (6 more)
+├── Identity-Access/                # 4 tools
+│   ├── Disable-InactiveComputers/
+│   ├── New-LocalUserBulk/
+│   ├── Repair-DomainTrust/
+│   └── Repair-DomainTrustStandalone/
 │
-├── Reporting-Inventory/            # 15 tools
-│   ├── Get-SystemInventory/
-│   ├── Get-HardwareInventory/
-│   └── ... (9 more)
+├── Reporting-Inventory/            # 10 tools
+│   ├── Export-InstalledApplications/
+│   ├── Get-BatteryHealth/
+│   ├── Get-BrowserExtensionInventory/
+│   ├── Get-CertificateHealthReport/
+│   ├── Get-CertificateSummary/
+│   ├── Get-ComplianceReport/
+│   ├── Get-LocalUsersAndGroups/
+│   ├── Get-PatchComplianceReport/
+│   ├── Get-StartupTasks/
+│   └── Get-SystemInventory/
 │
-├── Security-Compliance/            # 9 tools
-│   ├── Install-Sysmon/
-│   │   ├── Install-Sysmon.ps1
-│   │   ├── Config/sysmonconfig.xml
-│   │   └── README.md
-│   └── Remove-RevokedRootCertificate/
+├── Security-Compliance/            # 7 tools
+│   ├── Enable-BitLocker/
+│   ├── Get-BitLockerStatus/
+│   ├── Get-DefenderHealth/
+│   ├── Get-LAPSStatus/
+│   ├── Install-Sysmon/  (+ Config/sysmonconfig.xml)
+│   ├── Remove-RevokedRootCertificate/
+│   └── Test-SecureBoot/
 │
-├── Software-Deployment/            # 4 tools
+├── Software-Deployment/            # 3 tools
+│   ├── Get-StoreAppInventory/
 │   ├── Install-Fonts/
 │   └── Uninstall-Fonts/
 │
 └── Utilities-Tools/                # 5 tools
+    ├── Find-LargeFiles/
+    ├── Get-LocalAdminReport/
+    ├── Get-ScheduledTaskReport/
+    ├── Invoke-RemoteCommand/
     └── Invoke-RunAsAdmin/
 ```
 
