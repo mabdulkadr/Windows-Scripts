@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Get-LocalAdminReport - Audit local Administrators members
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0
@@ -353,7 +353,7 @@ $Body
 <div class="footer">
   <div class="footer-col"><h4>Run Metadata</h4><div class="row"><span class="label">Report</span><span class="value">$ReportName</span></div><div class="row"><span class="label">Version</span><span class="value">v$Version</span></div><div class="row"><span class="label">Run ID</span><span class="value">$RunId</span></div><div class="row"><span class="label">Generated</span><span class="value">$GeneratedAt</span></div></div>
   <div class="footer-col"><h4>Environment</h4><div class="row"><span class="label">Computer</span><span class="value">$ComputerName</span></div><div class="row"><span class="label">Tenant</span><span class="value">$Tenant</span></div><div class="row"><span class="label">Operator</span><span class="value">$Operator</span></div></div>
-  <div class="footer-col"><h4>About</h4><div class="row"><span class="label">Toolkit</span><span class="value">Windows-Scripts</span></div><div class="row"><span class="label">Author</span><span class="value">Mohammed Omar</span></div><div class="row"><span class="label">Repo</span><span class="value">momar.tech</span></div></div>
+  <div class="footer-col"><h4>About</h4><div class="row"><span class="label">Toolkit</span><span class="value">Windows-Scripts</span></div><div class="row"><span class="label">Author</span><span class="value">Mohammad Abdelkader Omar</span></div><div class="row"><span class="label">Repo</span><span class="value">momar.tech</span></div></div>
 </div>
 </div>
 <button class="print-btn" onclick="window.print()">Print / Export PDF</button>

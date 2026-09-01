@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Enable-BitLocker - Enable BitLocker with TPM protector (WhatIf-safe)
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

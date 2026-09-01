@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Enable-SystemRestore - Enable System Restore on the system drive
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

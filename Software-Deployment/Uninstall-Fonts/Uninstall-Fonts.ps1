@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Uninstall-Fonts - Remove fonts from the Fonts folder
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

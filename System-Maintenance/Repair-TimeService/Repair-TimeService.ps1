@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Repair-TimeService - Re-register W32Time and force resync
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

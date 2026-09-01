@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Get-EnrollmentStatus - Report Intune enrollment state
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0
@@ -316,7 +316,7 @@ $kpiHtml
 $chartsHtml
 $Body
 <div class="disclaimer-box"><strong>Disclaimer:</strong> $Disclaimer</div>
-<div class="footer"><div class="footer-col"><h4>Run Metadata</h4><div class="row"><span class="label">Report</span><span class="value">$ReportName</span></div><div class="row"><span class="label">Version</span><span class="value">v$Version</span></div><div class="row"><span class="label">Run ID</span><span class="value">$RunId</span></div><div class="row"><span class="label">Generated</span><span class="value">$GeneratedAt</span></div></div><div class="footer-col"><h4>Environment</h4><div class="row"><span class="label">Computer</span><span class="value">$ComputerName</span></div><div class="row"><span class="label">Tenant</span><span class="value">$Tenant</span></div><div class="row"><span class="label">Operator</span><span class="value">$Operator</span></div></div><div class="footer-col"><h4>About</h4><div class="row"><span class="label">Toolkit</span><span class="value">Windows-Scripts</span></div><div class="row"><span class="label">Author</span><span class="value">Mohammed Omar</span></div><div class="row"><span class="label">Repo</span><span class="value">momar.tech</span></div></div></div>
+<div class="footer"><div class="footer-col"><h4>Run Metadata</h4><div class="row"><span class="label">Report</span><span class="value">$ReportName</span></div><div class="row"><span class="label">Version</span><span class="value">v$Version</span></div><div class="row"><span class="label">Run ID</span><span class="value">$RunId</span></div><div class="row"><span class="label">Generated</span><span class="value">$GeneratedAt</span></div></div><div class="footer-col"><h4>Environment</h4><div class="row"><span class="label">Computer</span><span class="value">$ComputerName</span></div><div class="row"><span class="label">Tenant</span><span class="value">$Tenant</span></div><div class="row"><span class="label">Operator</span><span class="value">$Operator</span></div></div><div class="footer-col"><h4>About</h4><div class="row"><span class="label">Toolkit</span><span class="value">Windows-Scripts</span></div><div class="row"><span class="label">Author</span><span class="value">Mohammad Abdelkader Omar</span></div><div class="row"><span class="label">Repo</span><span class="value">momar.tech</span></div></div></div>
 </div><button class="print-btn" onclick="window.print()">Print / Export PDF</button>
 <script>(function(){var sI=document.getElementById('reportSearch');var sM=document.getElementById('searchMeta');if(!sI)return;var tbs=document.querySelectorAll('table');var crs=document.querySelectorAll('.card');var sls=document.querySelectorAll('.summary-list');function af(q){q=(q||'').toLowerCase().trim();var tr=0,vr=0;tbs.forEach(function(t){var rs=t.querySelectorAll('tbody tr');rs.forEach(function(r){tr++;var m=!q||r.textContent.toLowerCase().indexOf(q)!==-1;r.style.display=m?'':'none';if(m)vr++})});crs.forEach(function(c){if(!q){c.style.display='';return}c.style.display=c.textContent.toLowerCase().indexOf(q)!==-1?'':'none'});sls.forEach(function(l){if(!q){l.style.display='';return}var its=l.querySelectorAll('li');var av=false;its.forEach(function(li){var mm=li.textContent.toLowerCase().indexOf(q)!==-1;li.style.display=mm?'':'none';if(mm)av=true});l.style.display=av?'':'none'});if(sM){if(!q)sM.textContent='';else sM.textContent=vr+' / '+tr+' rows'}}sI.addEventListener('input',function(e){af(e.target.value)})})();</script>
 $chartScripts

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Clear-TempCache - Clean Windows temporary files, prefetch, and recycle bin
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

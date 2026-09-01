@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Install-Fonts - Register fonts from a folder as system fonts
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

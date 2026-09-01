@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Invoke-WindowsUpdate - Scan and install Windows Updates (WUA API)
 
@@ -18,7 +18,7 @@
     Administrator for install; Standard user for scan
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

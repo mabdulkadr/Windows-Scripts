@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Optimize-WindowsSettings - Apply Windows optimization tweaks
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

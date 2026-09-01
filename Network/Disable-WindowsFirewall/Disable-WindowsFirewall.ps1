@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Disable-WindowsFirewall - Disable Windows Firewall on all profiles (testing only)
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

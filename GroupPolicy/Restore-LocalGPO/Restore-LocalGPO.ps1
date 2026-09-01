@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Restore-LocalGPO - Restore Local Group Policy from a backup
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Invoke-RunAsAdmin - Launch a command as Administrator (UAC wrapper)
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

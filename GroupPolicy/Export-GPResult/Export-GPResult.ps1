@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Export-GPResult - Export gpresult HTML report beside the script
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0
