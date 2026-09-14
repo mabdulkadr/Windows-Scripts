@@ -6,7 +6,7 @@
     Audit Windows LAPS configuration and password age
 
 .DESCRIPTION
-    Checks LAPS policy (BackupDirectory, PasswordAge, AutomaticAccount), reads LAPS password expiry from AD/Entra where available, and reports compliance. No changes made.
+    Checks LAPS policy (BackupDirectory, PasswordAge, AutomaticAccount), reads LAPS password expiry from AD/Entra when available, and reports compliance. No changes made.
 
 .TAGS
     Security,LAPS,Identity
