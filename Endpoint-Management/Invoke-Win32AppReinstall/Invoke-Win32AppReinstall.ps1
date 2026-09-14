@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Invoke-Win32AppReinstall - Re-evaluate and reinstall all assigned Intune Win32 apps
 
@@ -18,7 +18,7 @@
     SYSTEM (Intune) or Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

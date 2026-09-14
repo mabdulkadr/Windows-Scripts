@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Restart-Explorer - Restart Windows Explorer
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

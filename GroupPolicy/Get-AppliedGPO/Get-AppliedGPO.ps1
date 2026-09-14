@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Get-AppliedGPO - List GPOs applied to the current user/computer
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

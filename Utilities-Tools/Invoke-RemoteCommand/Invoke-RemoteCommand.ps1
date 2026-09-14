@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Invoke-RemoteCommand - Run command on remote machines (WinRM parallel)
 
@@ -18,7 +18,7 @@
     Administrator on remote (delegated)
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

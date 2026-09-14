@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Install-Sysmon - Install Sysmon with the bundled sysmonconfig.xml
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Repair-IntuneManagementExtension - Repair the Intune Management Extension
 
@@ -18,7 +18,7 @@
     SYSTEM (Intune) or Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

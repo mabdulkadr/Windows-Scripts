@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Invoke-SystemCleanup - Run Disk Cleanup silently
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     New-LocalUserBulk - Bulk provision local users from CSV
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

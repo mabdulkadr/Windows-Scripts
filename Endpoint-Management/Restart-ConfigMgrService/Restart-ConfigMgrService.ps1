@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Restart-ConfigMgrService - Restart the ConfigMgr client service
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

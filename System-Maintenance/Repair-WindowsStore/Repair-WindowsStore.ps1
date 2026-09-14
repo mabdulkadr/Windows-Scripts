@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Repair-WindowsStore - Reset Windows Store cache
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

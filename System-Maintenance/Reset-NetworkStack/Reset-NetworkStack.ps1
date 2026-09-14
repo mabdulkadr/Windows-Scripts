@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Reset-NetworkStack - Reset Winsock and TCP/IP stack
 
@@ -18,7 +18,7 @@
     Administrator
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0

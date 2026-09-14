@@ -1,4 +1,4 @@
-﻿<#
+<#
 .TITLE
     Get-IntuneDeviceDiagnostics - Collect Intune device diagnostics (local)
 
@@ -18,7 +18,7 @@
     Standard user
 
 .AUTHOR
-    Mohammed Omar
+    Mohammad Abdelkader Omar
 
 .VERSION
     2.1.0
