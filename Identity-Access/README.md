@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Identity-Acces
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -38,17 +38,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Identity-Acces
 
 ---
 
-# 🧰 Tools (4)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Disable-InactiveComputers | Disable-InactiveComputers.ps1 | [Disable-InactiveComputers](./Disable-InactiveComputers/) |
-| New-LocalUserBulk | New-LocalUserBulk.ps1 | [New-LocalUserBulk](./New-LocalUserBulk/) |
-| Repair-DomainTrust | Repair-DomainTrust.ps1 | [Repair-DomainTrust](./Repair-DomainTrust/) |
-| Repair-DomainTrustStandalone | Repair-DomainTrustStandalone.ps1 | [Repair-DomainTrustStandalone](./Repair-DomainTrustStandalone/) |
-
----
-
 # 📂 Project Structure
 
 ```text
@@ -66,6 +55,17 @@ Identity-Access/
 │   ├── Repair-DomainTrustStandalone.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Disable-InactiveComputers | Disable-InactiveComputers.ps1 | [Disable-InactiveComputers](./Disable-InactiveComputers/) |
+| New-LocalUserBulk | New-LocalUserBulk.ps1 | [New-LocalUserBulk](./New-LocalUserBulk/) |
+| Repair-DomainTrust | Repair-DomainTrust.ps1 | [Repair-DomainTrust](./Repair-DomainTrust/) |
+| Repair-DomainTrustStandalone | Repair-DomainTrustStandalone.ps1 | [Repair-DomainTrustStandalone](./Repair-DomainTrustStandalone/) |
 
 ---
 

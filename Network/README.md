@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Network/`
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -35,21 +35,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Network/`
 * **CLI-First** - pure PowerShell 5.1, no GUI dependencies
 * **Canonical logging** - `Initialize-Log` / `Write-Banner` / `Write-Log` / `Finish-Script`
 * **Intune-Ready** - exit codes 0/1/2, SYSTEM context support
-
----
-
-# 🧰 Tools (8)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Clear-DnsCache | Clear-DnsCache.ps1 | [Clear-DnsCache](./Clear-DnsCache/) |
-| Disable-IPv6 | Disable-IPv6.ps1 | [Disable-IPv6](./Disable-IPv6/) |
-| Disable-WindowsFirewall | Disable-WindowsFirewall.ps1 | [Disable-WindowsFirewall](./Disable-WindowsFirewall/) |
-| Get-OpenPorts | Get-OpenPorts.ps1 | [Get-OpenPorts](./Get-OpenPorts/) |
-| Get-TLSConfiguration | Get-TLSConfiguration.ps1 | [Get-TLSConfiguration](./Get-TLSConfiguration/) |
-| Reset-WindowsFirewall | Reset-WindowsFirewall.ps1 | [Reset-WindowsFirewall](./Reset-WindowsFirewall/) |
-| Reset-Winsock | Reset-Winsock.ps1 | [Reset-Winsock](./Reset-Winsock/) |
-| Test-NetworkLatency | Test-NetworkLatency.ps1 | [Test-NetworkLatency](./Test-NetworkLatency/) |
 
 ---
 
@@ -82,6 +67,21 @@ Network/
 │   ├── Test-NetworkLatency.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Clear-DnsCache | Clear-DnsCache.ps1 | [Clear-DnsCache](./Clear-DnsCache/) |
+| Disable-IPv6 | Disable-IPv6.ps1 | [Disable-IPv6](./Disable-IPv6/) |
+| Disable-WindowsFirewall | Disable-WindowsFirewall.ps1 | [Disable-WindowsFirewall](./Disable-WindowsFirewall/) |
+| Get-OpenPorts | Get-OpenPorts.ps1 | [Get-OpenPorts](./Get-OpenPorts/) |
+| Get-TLSConfiguration | Get-TLSConfiguration.ps1 | [Get-TLSConfiguration](./Get-TLSConfiguration/) |
+| Reset-WindowsFirewall | Reset-WindowsFirewall.ps1 | [Reset-WindowsFirewall](./Reset-WindowsFirewall/) |
+| Reset-Winsock | Reset-Winsock.ps1 | [Reset-Winsock](./Reset-Winsock/) |
+| Test-NetworkLatency | Test-NetworkLatency.ps1 | [Test-NetworkLatency](./Test-NetworkLatency/) |
 
 ---
 

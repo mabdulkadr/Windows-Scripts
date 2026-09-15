@@ -140,6 +140,22 @@ Windows-Scripts/
 
 ---
 
+# 📁 Scripts Included
+
+| Category | Tools | Path |
+|----------|:-----:|------|
+| System-Maintenance | 19 | [System-Maintenance](./System-Maintenance/) |
+| Endpoint-Management | 8 | [Endpoint-Management](./Endpoint-Management/) |
+| GroupPolicy | 6 | [GroupPolicy](./GroupPolicy/) |
+| Network | 8 | [Network](./Network/) |
+| Identity-Access | 4 | [Identity-Access](./Identity-Access/) |
+| Reporting-Inventory | 10 | [Reporting-Inventory](./Reporting-Inventory/) |
+| Security-Compliance | 7 | [Security-Compliance](./Security-Compliance/) |
+| Software-Deployment | 3 | [Software-Deployment](./Software-Deployment/) |
+| Utilities-Tools | 5 | [Utilities-Tools](./Utilities-Tools/) |
+
+---
+
 # 🚀 Usage
 
 ### Run a single tool

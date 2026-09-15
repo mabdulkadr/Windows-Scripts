@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Software-Deplo
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -38,16 +38,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Software-Deplo
 
 ---
 
-# 🧰 Tools (3)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Get-StoreAppInventory | Get-StoreAppInventory.ps1 | [Get-StoreAppInventory](./Get-StoreAppInventory/) |
-| Install-Fonts | Install-Fonts.ps1 | [Install-Fonts](./Install-Fonts/) |
-| Uninstall-Fonts | Uninstall-Fonts.ps1 | [Uninstall-Fonts](./Uninstall-Fonts/) |
-
----
-
 # 📂 Project Structure
 
 ```text
@@ -62,6 +52,16 @@ Software-Deployment/
 │   ├── Uninstall-Fonts.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Get-StoreAppInventory | Get-StoreAppInventory.ps1 | [Get-StoreAppInventory](./Get-StoreAppInventory/) |
+| Install-Fonts | Install-Fonts.ps1 | [Install-Fonts](./Install-Fonts/) |
+| Uninstall-Fonts | Uninstall-Fonts.ps1 | [Uninstall-Fonts](./Uninstall-Fonts/) |
 
 ---
 

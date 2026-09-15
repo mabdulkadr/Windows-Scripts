@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Utilities-Tool
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -38,18 +38,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Utilities-Tool
 
 ---
 
-# 🧰 Tools (5)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Find-LargeFiles | Find-LargeFiles.ps1 | [Find-LargeFiles](./Find-LargeFiles/) |
-| Get-LocalAdminReport | Get-LocalAdminReport.ps1 | [Get-LocalAdminReport](./Get-LocalAdminReport/) |
-| Get-ScheduledTaskReport | Get-ScheduledTaskReport.ps1 | [Get-ScheduledTaskReport](./Get-ScheduledTaskReport/) |
-| Invoke-RemoteCommand | Invoke-RemoteCommand.ps1 | [Invoke-RemoteCommand](./Invoke-RemoteCommand/) |
-| Invoke-RunAsAdmin | Invoke-RunAsAdmin.ps1 | [Invoke-RunAsAdmin](./Invoke-RunAsAdmin/) |
-
----
-
 # 📂 Project Structure
 
 ```text
@@ -70,6 +58,18 @@ Utilities-Tools/
 │   ├── Invoke-RunAsAdmin.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Find-LargeFiles | Find-LargeFiles.ps1 | [Find-LargeFiles](./Find-LargeFiles/) |
+| Get-LocalAdminReport | Get-LocalAdminReport.ps1 | [Get-LocalAdminReport](./Get-LocalAdminReport/) |
+| Get-ScheduledTaskReport | Get-ScheduledTaskReport.ps1 | [Get-ScheduledTaskReport](./Get-ScheduledTaskReport/) |
+| Invoke-RemoteCommand | Invoke-RemoteCommand.ps1 | [Invoke-RemoteCommand](./Invoke-RemoteCommand/) |
+| Invoke-RunAsAdmin | Invoke-RunAsAdmin.ps1 | [Invoke-RunAsAdmin](./Invoke-RunAsAdmin/) |
 
 ---
 

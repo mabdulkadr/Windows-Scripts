@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Security-Compl
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -35,20 +35,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Security-Compl
 * **CLI-First** - pure PowerShell 5.1, no GUI dependencies
 * **Canonical logging** - `Initialize-Log` / `Write-Banner` / `Write-Log` / `Finish-Script`
 * **Intune-Ready** - exit codes 0/1/2, SYSTEM context support
-
----
-
-# 🧰 Tools (7)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Enable-BitLocker | Enable-BitLocker.ps1 | [Enable-BitLocker](./Enable-BitLocker/) |
-| Get-BitLockerStatus | Get-BitLockerStatus.ps1 | [Get-BitLockerStatus](./Get-BitLockerStatus/) |
-| Get-DefenderHealth | Get-DefenderHealth.ps1 | [Get-DefenderHealth](./Get-DefenderHealth/) |
-| Get-LAPSStatus | Get-LAPSStatus.ps1 | [Get-LAPSStatus](./Get-LAPSStatus/) |
-| Install-Sysmon | Install-Sysmon.ps1 | [Install-Sysmon](./Install-Sysmon/) |
-| Remove-RevokedRootCertificate | Remove-RevokedRootCertificate.ps1 | [Remove-RevokedRootCertificate](./Remove-RevokedRootCertificate/) |
-| Test-SecureBoot | Test-SecureBoot.ps1 | [Test-SecureBoot](./Test-SecureBoot/) |
 
 ---
 
@@ -78,6 +64,20 @@ Security-Compliance/
 │   ├── Test-SecureBoot.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Enable-BitLocker | Enable-BitLocker.ps1 | [Enable-BitLocker](./Enable-BitLocker/) |
+| Get-BitLockerStatus | Get-BitLockerStatus.ps1 | [Get-BitLockerStatus](./Get-BitLockerStatus/) |
+| Get-DefenderHealth | Get-DefenderHealth.ps1 | [Get-DefenderHealth](./Get-DefenderHealth/) |
+| Get-LAPSStatus | Get-LAPSStatus.ps1 | [Get-LAPSStatus](./Get-LAPSStatus/) |
+| Install-Sysmon | Install-Sysmon.ps1 | [Install-Sysmon](./Install-Sysmon/) |
+| Remove-RevokedRootCertificate | Remove-RevokedRootCertificate.ps1 | [Remove-RevokedRootCertificate](./Remove-RevokedRootCertificate/) |
+| Test-SecureBoot | Test-SecureBoot.ps1 | [Test-SecureBoot](./Test-SecureBoot/) |
 
 ---
 

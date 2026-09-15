@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Reporting-Inve
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -35,23 +35,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Reporting-Inve
 * **CLI-First** - pure PowerShell 5.1, no GUI dependencies
 * **Canonical logging** - `Initialize-Log` / `Write-Banner` / `Write-Log` / `Finish-Script`
 * **Intune-Ready** - exit codes 0/1/2, SYSTEM context support
-
----
-
-# 🧰 Tools (10)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Export-InstalledApplications | Export-InstalledApplications.ps1 | [Export-InstalledApplications](./Export-InstalledApplications/) |
-| Get-BatteryHealth | Get-BatteryHealth.ps1 | [Get-BatteryHealth](./Get-BatteryHealth/) |
-| Get-BrowserExtensionInventory | Get-BrowserExtensionInventory.ps1 | [Get-BrowserExtensionInventory](./Get-BrowserExtensionInventory/) |
-| Get-CertificateHealthReport | Get-CertificateHealthReport.ps1 | [Get-CertificateHealthReport](./Get-CertificateHealthReport/) |
-| Get-CertificateSummary | Get-CertificateSummary.ps1 | [Get-CertificateSummary](./Get-CertificateSummary/) |
-| Get-ComplianceReport | Get-ComplianceReport.ps1 | [Get-ComplianceReport](./Get-ComplianceReport/) |
-| Get-LocalUsersAndGroups | Get-LocalUsersAndGroups.ps1 | [Get-LocalUsersAndGroups](./Get-LocalUsersAndGroups/) |
-| Get-PatchComplianceReport | Get-PatchComplianceReport.ps1 | [Get-PatchComplianceReport](./Get-PatchComplianceReport/) |
-| Get-StartupTasks | Get-StartupTasks.ps1 | [Get-StartupTasks](./Get-StartupTasks/) |
-| Get-SystemInventory | Get-SystemInventory.ps1 | [Get-SystemInventory](./Get-SystemInventory/) |
 
 ---
 
@@ -90,6 +73,23 @@ Reporting-Inventory/
 │   ├── Get-SystemInventory.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Export-InstalledApplications | Export-InstalledApplications.ps1 | [Export-InstalledApplications](./Export-InstalledApplications/) |
+| Get-BatteryHealth | Get-BatteryHealth.ps1 | [Get-BatteryHealth](./Get-BatteryHealth/) |
+| Get-BrowserExtensionInventory | Get-BrowserExtensionInventory.ps1 | [Get-BrowserExtensionInventory](./Get-BrowserExtensionInventory/) |
+| Get-CertificateHealthReport | Get-CertificateHealthReport.ps1 | [Get-CertificateHealthReport](./Get-CertificateHealthReport/) |
+| Get-CertificateSummary | Get-CertificateSummary.ps1 | [Get-CertificateSummary](./Get-CertificateSummary/) |
+| Get-ComplianceReport | Get-ComplianceReport.ps1 | [Get-ComplianceReport](./Get-ComplianceReport/) |
+| Get-LocalUsersAndGroups | Get-LocalUsersAndGroups.ps1 | [Get-LocalUsersAndGroups](./Get-LocalUsersAndGroups/) |
+| Get-PatchComplianceReport | Get-PatchComplianceReport.ps1 | [Get-PatchComplianceReport](./Get-PatchComplianceReport/) |
+| Get-StartupTasks | Get-StartupTasks.ps1 | [Get-StartupTasks](./Get-StartupTasks/) |
+| Get-SystemInventory | Get-SystemInventory.ps1 | [Get-SystemInventory](./Get-SystemInventory/) |
 
 ---
 

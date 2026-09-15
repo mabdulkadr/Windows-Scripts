@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/System-Mainten
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -35,32 +35,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/System-Mainten
 * **CLI-First** - pure PowerShell 5.1, no GUI dependencies
 * **Canonical logging** - `Initialize-Log` / `Write-Banner` / `Write-Log` / `Finish-Script`
 * **Intune-Ready** - exit codes 0/1/2, SYSTEM context support
-
----
-
-# 🧰 Tools (19)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Clear-PrintQueue | Clear-PrintQueue.ps1 | [Clear-PrintQueue](./Clear-PrintQueue/) |
-| Clear-TempCache | Clear-TempCache.ps1 | [Clear-TempCache](./Clear-TempCache/) |
-| Disable-FastStartup | Disable-FastStartup.ps1 | [Disable-FastStartup](./Disable-FastStartup/) |
-| Enable-FastStartup | Enable-FastStartup.ps1 | [Enable-FastStartup](./Enable-FastStartup/) |
-| Enable-SystemRestore | Enable-SystemRestore.ps1 | [Enable-SystemRestore](./Enable-SystemRestore/) |
-| Get-USBDeviceHistory | Get-USBDeviceHistory.ps1 | [Get-USBDeviceHistory](./Get-USBDeviceHistory/) |
-| Invoke-PCMaintenance | Invoke-PCMaintenance.ps1 | [Invoke-PCMaintenance](./Invoke-PCMaintenance/) |
-| Invoke-SystemCleanup | Invoke-SystemCleanup.ps1 | [Invoke-SystemCleanup](./Invoke-SystemCleanup/) |
-| Invoke-WindowsUpdate | Invoke-WindowsUpdate.ps1 | [Invoke-WindowsUpdate](./Invoke-WindowsUpdate/) |
-| Optimize-WindowsSettings | Optimize-WindowsSettings.ps1 | [Optimize-WindowsSettings](./Optimize-WindowsSettings/) |
-| Remove-WindowsBloatware | Remove-WindowsBloatware.ps1 | [Remove-WindowsBloatware](./Remove-WindowsBloatware/) |
-| Repair-TimeService | Repair-TimeService.ps1 | [Repair-TimeService](./Repair-TimeService/) |
-| Repair-WindowsImage | Repair-WindowsImage.ps1 | [Repair-WindowsImage](./Repair-WindowsImage/) |
-| Repair-WindowsStore | Repair-WindowsStore.ps1 | [Repair-WindowsStore](./Repair-WindowsStore/) |
-| Repair-WindowsUpdate | Repair-WindowsUpdate.ps1 | [Repair-WindowsUpdate](./Repair-WindowsUpdate/) |
-| Reset-NetworkStack | Reset-NetworkStack.ps1 | [Reset-NetworkStack](./Reset-NetworkStack/) |
-| Reset-PrintSpooler | Reset-PrintSpooler.ps1 | [Reset-PrintSpooler](./Reset-PrintSpooler/) |
-| Restart-Explorer | Restart-Explorer.ps1 | [Restart-Explorer](./Restart-Explorer/) |
-| Watch-DiskSpace | Watch-DiskSpace.ps1 | [Watch-DiskSpace](./Watch-DiskSpace/) |
 
 ---
 
@@ -126,6 +100,32 @@ System-Maintenance/
 │   ├── Watch-DiskSpace.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Clear-PrintQueue | Clear-PrintQueue.ps1 | [Clear-PrintQueue](./Clear-PrintQueue/) |
+| Clear-TempCache | Clear-TempCache.ps1 | [Clear-TempCache](./Clear-TempCache/) |
+| Disable-FastStartup | Disable-FastStartup.ps1 | [Disable-FastStartup](./Disable-FastStartup/) |
+| Enable-FastStartup | Enable-FastStartup.ps1 | [Enable-FastStartup](./Enable-FastStartup/) |
+| Enable-SystemRestore | Enable-SystemRestore.ps1 | [Enable-SystemRestore](./Enable-SystemRestore/) |
+| Get-USBDeviceHistory | Get-USBDeviceHistory.ps1 | [Get-USBDeviceHistory](./Get-USBDeviceHistory/) |
+| Invoke-PCMaintenance | Invoke-PCMaintenance.ps1 | [Invoke-PCMaintenance](./Invoke-PCMaintenance/) |
+| Invoke-SystemCleanup | Invoke-SystemCleanup.ps1 | [Invoke-SystemCleanup](./Invoke-SystemCleanup/) |
+| Invoke-WindowsUpdate | Invoke-WindowsUpdate.ps1 | [Invoke-WindowsUpdate](./Invoke-WindowsUpdate/) |
+| Optimize-WindowsSettings | Optimize-WindowsSettings.ps1 | [Optimize-WindowsSettings](./Optimize-WindowsSettings/) |
+| Remove-WindowsBloatware | Remove-WindowsBloatware.ps1 | [Remove-WindowsBloatware](./Remove-WindowsBloatware/) |
+| Repair-TimeService | Repair-TimeService.ps1 | [Repair-TimeService](./Repair-TimeService/) |
+| Repair-WindowsImage | Repair-WindowsImage.ps1 | [Repair-WindowsImage](./Repair-WindowsImage/) |
+| Repair-WindowsStore | Repair-WindowsStore.ps1 | [Repair-WindowsStore](./Repair-WindowsStore/) |
+| Repair-WindowsUpdate | Repair-WindowsUpdate.ps1 | [Repair-WindowsUpdate](./Repair-WindowsUpdate/) |
+| Reset-NetworkStack | Reset-NetworkStack.ps1 | [Reset-NetworkStack](./Reset-NetworkStack/) |
+| Reset-PrintSpooler | Reset-PrintSpooler.ps1 | [Reset-PrintSpooler](./Reset-PrintSpooler/) |
+| Restart-Explorer | Restart-Explorer.ps1 | [Restart-Explorer](./Restart-Explorer/) |
+| Watch-DiskSpace | Watch-DiskSpace.ps1 | [Watch-DiskSpace](./Watch-DiskSpace/) |
 
 ---
 

@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Endpoint-Manag
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -35,21 +35,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Endpoint-Manag
 * **CLI-First** - pure PowerShell 5.1, no GUI dependencies
 * **Canonical logging** - `Initialize-Log` / `Write-Banner` / `Write-Log` / `Finish-Script`
 * **Intune-Ready** - exit codes 0/1/2, SYSTEM context support
-
----
-
-# 🧰 Tools (8)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Get-EnrollmentStatus | Get-EnrollmentStatus.ps1 | [Get-EnrollmentStatus](./Get-EnrollmentStatus/) |
-| Get-IntuneDeviceDiagnostics | Get-IntuneDeviceDiagnostics.ps1 | [Get-IntuneDeviceDiagnostics](./Get-IntuneDeviceDiagnostics/) |
-| Invoke-IntuneReenrollment | Invoke-IntuneReenrollment.ps1 | [Invoke-IntuneReenrollment](./Invoke-IntuneReenrollment/) |
-| Invoke-SCCMActions | Invoke-SCCMActions.ps1 | [Invoke-SCCMActions](./Invoke-SCCMActions/) |
-| Invoke-Win32AppReinstall | Invoke-Win32AppReinstall.ps1 | [Invoke-Win32AppReinstall](./Invoke-Win32AppReinstall/) |
-| Repair-IntuneManagementExtension | Repair-IntuneManagementExtension.ps1 | [Repair-IntuneManagementExtension](./Repair-IntuneManagementExtension/) |
-| Restart-ConfigMgrService | Restart-ConfigMgrService.ps1 | [Restart-ConfigMgrService](./Restart-ConfigMgrService/) |
-| Restart-IntuneService | Restart-IntuneService.ps1 | [Restart-IntuneService](./Restart-IntuneService/) |
 
 ---
 
@@ -82,6 +67,21 @@ Endpoint-Management/
 │   ├── Restart-IntuneService.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Get-EnrollmentStatus | Get-EnrollmentStatus.ps1 | [Get-EnrollmentStatus](./Get-EnrollmentStatus/) |
+| Get-IntuneDeviceDiagnostics | Get-IntuneDeviceDiagnostics.ps1 | [Get-IntuneDeviceDiagnostics](./Get-IntuneDeviceDiagnostics/) |
+| Invoke-IntuneReenrollment | Invoke-IntuneReenrollment.ps1 | [Invoke-IntuneReenrollment](./Invoke-IntuneReenrollment/) |
+| Invoke-SCCMActions | Invoke-SCCMActions.ps1 | [Invoke-SCCMActions](./Invoke-SCCMActions/) |
+| Invoke-Win32AppReinstall | Invoke-Win32AppReinstall.ps1 | [Invoke-Win32AppReinstall](./Invoke-Win32AppReinstall/) |
+| Repair-IntuneManagementExtension | Repair-IntuneManagementExtension.ps1 | [Repair-IntuneManagementExtension](./Repair-IntuneManagementExtension/) |
+| Restart-ConfigMgrService | Restart-ConfigMgrService.ps1 | [Restart-ConfigMgrService](./Restart-ConfigMgrService/) |
+| Restart-IntuneService | Restart-IntuneService.ps1 | [Restart-IntuneService](./Restart-IntuneService/) |
 
 ---
 
@@ -118,9 +118,9 @@ Get-Help .\Endpoint-Management\Get-EnrollmentStatus\Get-EnrollmentStatus.ps1 -Fu
 ---
 
 ## 👤 Author
-**Mohammad Abdelkader Omar**
-GitHub: [@mabdulkadr](https://github.com/mabdulkadr)
-Website: [momar.tech](https://momar.tech)
+**Mohammad Abdelkader Omar**  
+GitHub: [@mabdulkadr](https://github.com/mabdulkadr)  
+Website: [momar.tech](https://momar.tech)  
 ## 📜 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).

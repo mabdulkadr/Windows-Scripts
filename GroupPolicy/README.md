@@ -11,7 +11,7 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/GroupPolicy/`
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
 [![Version](https://img.shields.io/badge/Version-2.1.0-334155?style=for-the-badge)](#-overview)
 
-[Overview](#-overview) | [Features](#-core-features) | [Tools](#-tools) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
+[Overview](#-overview) | [Features](#-core-features) | [Scripts Included](#-scripts-included) | [Usage](#-usage) | [Requirements](#%EF%B8%8F-requirements) | [License](#-license)
 
 </div>
 
@@ -38,19 +38,6 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/GroupPolicy/`
 
 ---
 
-# 🧰 Tools (6)
-
-| Tool | Script | Path |
-|------|--------|------|
-| Backup-LocalGPO | Backup-LocalGPO.ps1 | [Backup-LocalGPO](./Backup-LocalGPO/) |
-| Export-GPResult | Export-GPResult.ps1 | [Export-GPResult](./Export-GPResult/) |
-| Get-AppliedGPO | Get-AppliedGPO.ps1 | [Get-AppliedGPO](./Get-AppliedGPO/) |
-| Invoke-RegistryPolicyAudit | Invoke-RegistryPolicyAudit.ps1 | [Invoke-RegistryPolicyAudit](./Invoke-RegistryPolicyAudit/) |
-| Reset-LocalGPO | Reset-LocalGPO.ps1 | [Reset-LocalGPO](./Reset-LocalGPO/) |
-| Restore-LocalGPO | Restore-LocalGPO.ps1 | [Restore-LocalGPO](./Restore-LocalGPO/) |
-
----
-
 # 📂 Project Structure
 
 ```text
@@ -74,6 +61,19 @@ GroupPolicy/
 │   ├── Restore-LocalGPO.ps1
 │   └── README.md
 ```
+
+---
+
+# 📁 Scripts Included
+
+| Tool | Script | Path |
+|------|--------|------|
+| Backup-LocalGPO | Backup-LocalGPO.ps1 | [Backup-LocalGPO](./Backup-LocalGPO/) |
+| Export-GPResult | Export-GPResult.ps1 | [Export-GPResult](./Export-GPResult/) |
+| Get-AppliedGPO | Get-AppliedGPO.ps1 | [Get-AppliedGPO](./Get-AppliedGPO/) |
+| Invoke-RegistryPolicyAudit | Invoke-RegistryPolicyAudit.ps1 | [Invoke-RegistryPolicyAudit](./Invoke-RegistryPolicyAudit/) |
+| Reset-LocalGPO | Reset-LocalGPO.ps1 | [Reset-LocalGPO](./Reset-LocalGPO/) |
+| Restore-LocalGPO | Restore-LocalGPO.ps1 | [Restore-LocalGPO](./Restore-LocalGPO/) |
 
 ---
 
