@@ -111,7 +111,7 @@ function Initialize-Log {
 function Write-Banner {
     [CmdletBinding()][Alias('Show-Banner')]
     param()
-    \$title      = '{0} | {1} | {2}' -f \$SolutionName, \$ScriptMode, (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+    $title      = '{0} | {1} | {2}' -f $SolutionName, $ScriptMode, (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
     $bannerLine = '=' * 78
     $lines = @('', $bannerLine, $title, $bannerLine)
     foreach ($line in $lines) {
@@ -271,4 +271,5 @@ catch {
     $script:Result.Error = @{ Message = $_.Exception.Message; Type = $_.Exception.GetType().FullName; StackTrace = $_.ScriptStackTrace }
         Finish-Script -ExitCode 2 -Message "Script execution error: $($_.Exception.Message)" -Level 'ERROR'
 }
+
 
