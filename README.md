@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛠️ Windows-Scripts
+# 🛠️ Windows-Endpoint-Scripts
 
 **Enterprise Windows Administration Toolkit — 70 Tools in 9 Categories**
 
@@ -21,9 +21,9 @@ Modern PowerShell toolkit for Helpdesk & SysAdmins — System, Endpoint, GroupPo
 
 # 📖 Overview
 
-Windows-Scripts is a Windows administration toolkit with 70 PowerShell tools in 9 categories. Each script lives in its own folder with a dedicated README.md, which keeps documentation and deployment isolated.
+Windows-Endpoint-Scripts is a Windows administration toolkit with 70 PowerShell tools in 9 categories. Each script lives in its own folder with a dedicated README.md, which keeps documentation and deployment isolated.
 
-> **v2.1 Structure:** `Windows-Scripts/<Category>/<ScriptName>/<ScriptName>.ps1 + README.md`. There are no numeric prefixes or spaces, and each script is isolated.
+> **v2.1 Structure:** `Windows-Endpoint-Scripts/<Category>/<ScriptName>/<ScriptName>.ps1 + README.md`. There are no numeric prefixes or spaces, and each script is isolated.
 
 Built for helpdesk, endpoint management, and IT operations teams managing Intune / SCCM / Active Directory / M365 fleets.
 
@@ -42,7 +42,7 @@ Built for helpdesk, endpoint management, and IT operations teams managing Intune
 # 📂 Project Structure
 
 ```text
-Windows-Scripts/
+Windows-Endpoint-Scripts/
 │
 ├── README.md
 ├── LICENSE
@@ -224,7 +224,7 @@ This toolkit and every script it contains are provided as-is with no warranty of
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/mabdulkadrx)
 
-Built with [**PowerShell Enterprise Admin**](https://github.com/mabdulkadr/powershell-enterprise-admin-skill)
+Built with [**PowerShell Enterprise Admin**](https://github.com/mabdulkadr/powershell-enterprise-admin)
 
 </div>
 
