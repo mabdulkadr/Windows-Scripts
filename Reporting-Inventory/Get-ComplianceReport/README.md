@@ -20,7 +20,7 @@ Mode-CLI Windows-Scripts toolkit for endpoint management, helpdesk, and IT opera
 
 # 📖 Overview
 
-**Get-ComplianceReport** is a PowerShell CLI tool in the **Reporting-Inventory** category of the **Windows-Scripts** enterprise toolkit. Combines hotfix, Defender, and disk info into a single Reports/Compliance_<ts>.html.
+Get-ComplianceReport is a PowerShell CLI tool in the Reporting-Inventory category of the Windows-Scripts enterprise toolkit. It combines hotfix, Defender, and disk info into a single Reports/Compliance_<ts>.html.
 
 **Category:** `Reporting-Inventory`
 **Script:** `Get-ComplianceReport.ps1`
@@ -31,12 +31,12 @@ Mode-CLI Windows-Scripts toolkit for endpoint management, helpdesk, and IT opera
 # ✨ Features
 
 * Generate a device compliance HTML report
-* **Canonical logging** — dot-sources `scripts/Write-Log.ps1` (single source of truth: `Initialize-Log`, `Write-Banner`, `Write-Log`, `Finish-Script`)
-* **Graceful elevation** — detects privilege level at runtime via `Test-IsElevated` and degrades with a WARNING log instead of hard-failing
-* **Structured per-target results** — every action returns a `PSCustomObject` with `Target / Success / Skipped / Error` fields so MAIN can aggregate with `Measure-Object`
-* **Supports `-WhatIf`** via `[CmdletBinding(SupportsShouldProcess = True)]`
-* **Canonical exit codes** — `0 = success / 1 = failure / 2 = script error` (Intune-compliant)
-* **Per-script README** documenting parameters, exit codes, and operational notes
+* Logging dot-sources `scripts/Write-Log.ps1`, the single source of truth for `Initialize-Log`, `Write-Banner`, `Write-Log`, and `Finish-Script`.
+* Privilege level is detected at runtime with `Test-IsElevated`. Without elevation, the script logs a WARNING and degrades instead of hard-failing.
+* Each action returns a `PSCustomObject` with `Target / Success / Skipped / Error` fields so MAIN can aggregate results with `Measure-Object`.
+* Supports `-WhatIf` through `[CmdletBinding(SupportsShouldProcess = True)]`.
+* Exit codes are `0 = success / 1 = failure / 2 = script error` (Intune-compliant).
+* The README documents parameters, exit codes, and operational notes.
 
 ---
 
@@ -94,11 +94,11 @@ Get-Help .\Get-ComplianceReport.ps1 -Examples
 
 # ⚙️ Requirements
 
-* **OS:** Windows 10/11/Server 2019+
-* **PowerShell:** 5.1 or later (`#Requires -Version 5.1`)
-* **Permissions:** Standard user
-* **Modules:** None — uses built-in cmdlets only
-* **Logging:** Dot-sources `scripts/Write-Log.ps1` (5 levels: DEBUG / INFO / SUCCESS / WARNING / ERROR)
+* OS: Windows 10/11/Server 2019+
+* PowerShell: 5.1 or later (`#Requires -Version 5.1`)
+* Permissions: Standard user
+* Modules: None; uses built-in cmdlets only
+* Logging: Dot-sources `scripts/Write-Log.ps1` (5 levels: DEBUG / INFO / SUCCESS / WARNING / ERROR)
 
 ---
 
@@ -108,7 +108,7 @@ Get-Help .\Get-ComplianceReport.ps1 -Examples
 * Elevation is detected at runtime via `Test-IsElevated`; the script logs a warning and degrades gracefully when not elevated.
 * Each per-target result is returned as a structured `PSCustomObject` with `Target / Success / Skipped / Error` fields, aggregated in MAIN.
 * Log files are written to `C:\ProgramData\WindowsScripts\Logs\<yyyyMMdd>.log` (TSV-like `[time] [Level] message` lines).
-* Re-running the script is **idempotent** — it produces the same end state.
+* Re-running the script is idempotent; it produces the same end state.
 
 ---
 

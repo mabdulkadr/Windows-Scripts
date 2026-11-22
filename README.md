@@ -21,21 +21,21 @@ Modern PowerShell toolkit for Helpdesk & SysAdmins — System, Endpoint, GroupPo
 
 # 📖 Overview
 
-**Windows-Scripts** is a production-grade Windows administration toolkit with **70 PowerShell tools** organized into **9 categories** — each script lives in **its own folder with a dedicated README.md** for isolated documentation and deployment.
+Windows-Scripts is a Windows administration toolkit with 70 PowerShell tools in 9 categories. Each script lives in its own folder with a dedicated README.md, which keeps documentation and deployment isolated.
 
-> **v2.1 Structure:** `Windows-Scripts/<Category>/<ScriptName>/<ScriptName>.ps1 + README.md` — no numeric prefixes, no spaces, per-script isolation.
+> **v2.1 Structure:** `Windows-Scripts/<Category>/<ScriptName>/<ScriptName>.ps1 + README.md`. There are no numeric prefixes or spaces, and each script is isolated.
 
-Built for **Helpdesk, Endpoint Management, and IT Operations** managing Intune / SCCM / Active Directory / M365 fleets.
+Built for helpdesk, endpoint management, and IT operations teams managing Intune / SCCM / Active Directory / M365 fleets.
 
 ---
 
 # ✨ Core Features
 
-* **9 Categories** — System-Maintenance (19), Endpoint-Management (8), GroupPolicy (6), Network (8), Identity-Access (4), Reporting-Inventory (10), Security-Compliance (7), Software-Deployment (3), Utilities-Tools (5)
-* **70 Isolated Tools** — each in `Category/ScriptName/` with `README.md`
-* **Verb-Noun PascalCase** — no spaces, no typos, no double extensions
-* **CLI-First** — pure PowerShell 5.1, no GUI dependencies, STA not required
-* **Intune-Ready** — exit codes 0/1/2, SYSTEM context support
+* Nine categories: System-Maintenance (19), Endpoint-Management (8), GroupPolicy (6), Network (8), Identity-Access (4), Reporting-Inventory (10), Security-Compliance (7), Software-Deployment (3), Utilities-Tools (5).
+* Each of the 70 tools lives in `Category/ScriptName/` with a `README.md`.
+* Names use Verb-Noun PascalCase with no spaces, typos, or double extensions.
+* The tools run from the command line on PowerShell 5.1 with no GUI dependencies, and STA is not required.
+* Exit codes are 0/1/2, and the tools support the SYSTEM context for Intune.
 
 ---
 
@@ -136,7 +136,7 @@ Windows-Scripts/
     └── Invoke-RunAsAdmin/
 ```
 
-**Rule:** every script folder contains **exactly** `<ScriptName>.ps1` + `README.md` (+ bundled assets where needed). No loose files at category level.
+Rule: every script folder contains exactly `<ScriptName>.ps1` + `README.md` (+ bundled assets where needed). No loose files at category level.
 
 ---
 
@@ -186,10 +186,10 @@ Get-Content .\Network\Clear-DnsCache\README.md
 
 # ⚙️ Requirements
 
-- **OS:** Windows 10 21H2+ / Windows 11 22H2–24H2 / Server 2019+
-- **PowerShell:** 5.1+ (7.4+ recommended)
-- **Permissions:** Standard user for inventory/reporting; Administrator for system/GPO/firewall/deployment
-- **Modules:** `ActiveDirectory` (AD tools), `Microsoft.Graph` (M365 report) — see per-script README
+- OS: Windows 10 21H2+ / Windows 11 22H2–24H2 / Server 2019+
+- PowerShell: 5.1+ (7.4+ recommended)
+- Permissions: Standard user for inventory/reporting; Administrator for system/GPO/firewall/deployment
+- Modules: `ActiveDirectory` (AD tools), `Microsoft.Graph` (M365 report); see per-script README
 
 ---
 

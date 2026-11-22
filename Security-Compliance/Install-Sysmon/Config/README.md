@@ -20,20 +20,20 @@ Supports the parent Install-Sysmon tool by shipping the payload locally so deplo
 
 # 📖 Overview
 
-**Sysmon Config Pack** bundles the Sysmon driver binaries and the SwiftOnSecurity sysmon-config.xml baseline used by the parent **Install-Sysmon** script. The files are intentionally tracked in the repository so the Install-Sysmon tool runs out of the box without a separate download step.
+Sysmon Config Pack bundles the Sysmon driver binaries and the SwiftOnSecurity sysmon-config.xml baseline used by the parent Install-Sysmon script. The files are intentionally tracked in the repository so the tool runs out of the box without a separate download step.
 
 ---
 
 # ✨ Core Features
 
 ### 🔹 Sysmon Binaries
-* `Sysmon.exe` / `Sysmon64.exe` — Sysmon driver binaries from the Mark Russinovich / SwiftOnSecurity fork.
+* `Sysmon.exe` / `Sysmon64.exe`: Sysmon driver binaries from the Mark Russinovich / SwiftOnSecurity fork.
 
 ### 🔹 Baseline Config
-* `sysmonconfig.xml` — SwiftOnSecurity sysmon-config.xml community-curated baseline.
+* `sysmonconfig.xml`: the SwiftOnSecurity sysmon-config.xml community-curated baseline.
 
 ### 🔹 Dependency-First Delivery
-* Payload shipped alongside the installer — no network dependency during deployment.
+* The payload ships alongside the installer, so deployment has no network dependency.
 
 ---
 
@@ -79,7 +79,7 @@ Install-Sysmon.ps1
 
 # 🛡 Operational Notes
 
-* Do not deploy the Sysmon binary from this folder unless you trust the fork origin — verify hashes before production rollout.
+* Do not deploy the Sysmon binary from this folder unless you trust the fork origin. Verify hashes before production rollout.
 * Swapping to a download-based payload requires updating the parent script and the `.gitignore` entries.
 * The configuration file is a baseline: review events and tune `sysmonconfig.xml` for your environment.
 

@@ -19,22 +19,22 @@ Part of **Windows-Scripts** enterprise toolkit - `Windows-Scripts/Utilities-Tool
 
 # 📖 Overview
 
-**Utilities-Tools** contains **5 PowerShell CLI tools** for Utilities and Tools - file analysis, admin reports and elevation helpers.
+Utilities-Tools contains 5 PowerShell CLI tools for Utilities and Tools: file analysis, admin reports, and elevation helpers.
 
 **Category:** `Utilities-Tools`
 **Path:** `Utilities-Tools/`
 
-> **Structure:** `Windows-Scripts/Utilities-Tools/<ScriptName>/<ScriptName>.ps1 + README.md` - each tool is isolated with its own README.
+> **Structure:** `Windows-Scripts/Utilities-Tools/<ScriptName>/<ScriptName>.ps1 + README.md`. Each tool is isolated with its own README.
 
 ---
 
 # ✨ Core Features
 
-* **5 Isolated Tools** - each in `Utilities-Tools/ScriptName/` with `README.md`
-* **Verb-Noun PascalCase** - no spaces, no typos, no double extensions
-* **CLI-First** - pure PowerShell 5.1, no GUI dependencies
-* **Canonical logging** - `Initialize-Log` / `Write-Banner` / `Write-Log` / `Finish-Script`
-* **Intune-Ready** - exit codes 0/1/2, SYSTEM context support
+* Each of the 5 tools lives in `Utilities-Tools/ScriptName/` with its own `README.md`.
+* Names use Verb-Noun PascalCase with no spaces, typos, or double extensions.
+* The tools run from the command line on PowerShell 5.1 with no GUI dependencies.
+* Logging uses `Initialize-Log`, `Write-Banner`, `Write-Log`, and `Finish-Script`.
+* Exit codes are 0/1/2, and the tools support the SYSTEM context for Intune.
 
 ---
 
@@ -88,10 +88,10 @@ Get-Help .\Utilities-Tools\Find-LargeFiles\Find-LargeFiles.ps1 -Full
 
 # ⚙️ Requirements
 
-* **OS:** Windows 10/11/Server 2019+
-* **PowerShell:** 5.1 or later (`#Requires -Version 5.1`)
-* **Permissions:** See per-tool README for specific requirements
-* **Modules:** None - uses built-in cmdlets only (AD tools require `ActiveDirectory` module)
+* OS: Windows 10/11/Server 2019+
+* PowerShell: 5.1 or later (`#Requires -Version 5.1`)
+* Permissions: See per-tool README for specific requirements
+* Modules: None; uses built-in cmdlets only (AD tools require `ActiveDirectory` module)
 
 ---
 
@@ -101,7 +101,7 @@ Get-Help .\Utilities-Tools\Find-LargeFiles\Find-LargeFiles.ps1 -Full
 * Elevation is detected at runtime via `Test-IsElevated`; the script logs a warning and degrades gracefully when not elevated.
 * Each per-tool result is returned as a structured `PSCustomObject` with `Target / Success / Skipped / Error` fields, aggregated in MAIN.
 * Log files are written to `C:\ProgramData\WindowsScripts\Logs\<yyyyMMdd>.log` (TSV-like `[time] [Level] message` lines).
-* Re-running any tool is **idempotent** - it produces the same end state.
+* Re-running any tool is idempotent; it produces the same end state.
 
 ---
 
